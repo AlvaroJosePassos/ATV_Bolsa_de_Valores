@@ -91,7 +91,8 @@ class funcoes:
             tipo_operacao CHAR(6) NOT NULL,
             taxa_corretagem FLOAT NOT NULL,
             taxa_b3 FLOAT NOT NULL,
-            valor_operacao FLOAT NOT NULL
+            valor_operacao FLOAT NOT NULL,
+            preco_medio FLOAT NOT NULL
         );''')
         self.conector.commit()
         print('Banco de dados criado com sucesso!')
@@ -118,6 +119,7 @@ class funcoes:
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?)
             ''', (
         self.cod_ativo, self.data, self.qtd, self.valor_unt, self.tipo_op, self.taxa_corr, self.tx_b3, self.valor_op))
+        self.preco_medio = 0
         self.conector.commit()
         self.desconectar_banco()
         self.select_lista()
@@ -183,6 +185,13 @@ class funcoes:
             self.lista_operacoes.insert('', END, values=op)
         self.limpar_tela()
         self.desconectar_banco()
+
+    def calcular_preco_medio(self):
+        self.variaveis()
+        if self.tipo_op == "COMPRA":
+            self.preco_medio += self.valor_op / self.qtd 
+        else:
+            self.preco_medio =
 
 class aplicativo(funcoes):
     def __init__(self):
@@ -307,6 +316,62 @@ class aplicativo(funcoes):
 
         self.entrada_taxa_b3 = Entry(self.aba1)
         self.entrada_taxa_b3.place(relx=0.5, rely=0.88, relwidth=0.2)
+
+    def widgets_frame_2(self):
+        # LISTAGEM COM A EXIBIÇÃO DOS DADOS
+        self.lista_operacoes = ttk.Treeview(self.frame_2, height=3, column=('coluna1', 'coluna2', 'coluna3', 'coluna4', 'coluna5', 'coluna6', 'coluna7', 'coluna8', 'coluna9'))
+        self.lista_operacoes.heading('#0', text='')
+        self.lista_operacoes.heading('#1', text='Id')
+        self.lista_operacoes.heading('#2', text='Cód.')
+        self.lista_operacoes.heading('#3', text='Data')
+        self.lista_operacoes.heading('#4', text='Qtd')
+        self.lista_operacoes.heading('#5', text='Valor')
+        self.lista_operacoes.heading('#6', text='Tipo Op.')
+        self.lista_operacoes.heading('#7', text='Taxa')
+        self.lista_operacoes.heading('#8', text='Tx. B3')
+        self.lista_operacoes.heading('#9', text='Valor Op.')
+
+        # a soma dos widths da lista com exceção do item 0, tem que dar 500
+        self.lista_operacoes.column('#0', width=1)
+        self.lista_operacoes.column('#1', width=25)
+        self.lista_operacoes.column('#2', width=55)
+        self.lista_operacoes.column('#3', width=70)
+        self.lista_operacoes.column('#4', width=25)
+        self.lista_operacoes.column('#5', width=50)
+        self.lista_operacoes.column('#6', width=100)
+        self.lista_operacoes.column('#7', width=30)
+        self.lista_operacoes.column('#8', width=45)
+        self.lista_operacoes.column('#9', width=100)
+
+        self.lista_operacoes.place(relx=0.01, rely=0.1, relwidth=0.95, relheight=0.85)
+
+        # criação da barra de rolagem
+        self.barra_rolagem = Scrollbar(self.frame_2, orient='vertical')
+        self.lista_operacoes.configure(yscroll=self.barra_rolagem.set)
+        self.barra_rolagem.place(relx=0.96, rely=0.1, relwidth=0.02, relheight=0.85)
+
+        self.lista_operacoes.bind('<Double-1>', self.duplo_clique)
+
+    def menus(self):
+        barra_menu = Menu(self.janela)
+        self.janela.config(menu=barra_menu)
+        menu_item1 = Menu(barra_menu)
+        menu_item2 = Menu(barra_menu)
+        menu_item3 = Menu(barra_menu)
+
+        def sair(): self.janela.destroy()
+
+        barra_menu.add_cascade(label='Opções', menu=menu_item1)
+        barra_menu.add_cascade(label='Sobre', menu=menu_item2)
+        # barra_menu.add_cascade(label='Relatórios', menu=menu_item2)
+
+        menu_item1.add_command(label='Sair', command=sair)
+        menu_item1.add_command(label='Limpar Tela', command=self.limpar_tela)
+        menu_item2.add_command(label='Sobre a Versão')
+        # menu_item2.add_command(label='Ficha da Operação', command=self.relatorio_operacao)
+
+aplicativo()
+
 
     def widgets_frame_2(self):
         # LISTAGEM COM A EXIBIÇÃO DOS DADOS
