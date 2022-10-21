@@ -1,7 +1,7 @@
 from tkinter import *
-from tkinter import ttk
-from tkinter import scrolledtext
 import sqlite3
+import tkinter
+from tkinter import scrolledtext, ttk
 
 janela = Tk()
 
@@ -53,26 +53,29 @@ janela = Tk()
         self.operacao.save()
         self.imprimir_operacao()'''
 
+
 class funcoes:
     def calculo_operacao(self):
         if self.entrada_tipo_operacao.get() == 'COMPRA':
-            return  float(self.entrada_qtd_acoes.get()) * float(self.entrada_valor_unitario.get()) + float(self.entrada_taxa_corretagem.get()) + 0.0003 * float(self.entrada_qtd_acoes.get()) * float(self.entrada_valor_unitario.get())
+            return float(self.entrada_qtd_acoes.get()) * float(self.entrada_valor_unitario.get()) + float(self.entrada_taxa_corretagem.get()) + 0.0003 * float(self.entrada_qtd_acoes.get()) * float(self.entrada_valor_unitario.get())
         if self.entrada_tipo_operacao.get() == 'VENDA':
-            return  (float(self.entrada_qtd_acoes.get()) * float(self.entrada_valor_unitario.get())) - (float(self.entrada_taxa_corretagem.get()) + 0.0003 * float(self.entrada_qtd_acoes.get()) * float(self.entrada_valor_unitario.get()))
+            return (float(self.entrada_qtd_acoes.get()) * float(self.entrada_valor_unitario.get())) - (float(self.entrada_taxa_corretagem.get()) + 0.0003 * float(self.entrada_qtd_acoes.get()) * float(self.entrada_valor_unitario.get()))
 
     def calculo_preco_medio(self):
         self.conectar_banco()
-        quant = int(list(self.cursor.execute(f"SELECT COUNT(codigo_operacao) AS quantidade FROM operacoes WHERE codigo_operacao = '{self.entrada_codigo_ativo.get()}' and tipo_operacao = 'COMPRA';"))[0][0])
-        preco_ant = list(self.cursor.execute(f"SELECT MAX(preco_medio) FROM operacoes WHERE codigo_operacao = '{self.entrada_codigo_ativo.get()}' AND tipo_operacao = 'COMPRA' ;"))[0][0]
-        self.desconectar_banco()
+        quant = int(list(self.cursor.execute(
+            f"SELECT COUNT(codigo_operacao) AS quantidade FROM operacoes WHERE codigo_operacao = '{self.entrada_codigo_ativo.get()}' AND tipo_operacao = 'COMPRA';"))[0][0])
         if quant == 0:
+            self.desconectar_banco()
             if self.entrada_tipo_operacao.get() == "COMPRA":
-                return float(self.calculo_operacao())/float(self.entrada_qtd_acoes.get()) + float(preco_ant)
+                return float(self.calculo_operacao())/float(self.entrada_qtd_acoes.get())
             return 0
+        preco_ant = list(self.cursor.execute(
+            f"SELECT preco_medio FROM operacoes GROUP BY id_operacao HAVING codigo_operacao = '{self.entrada_codigo_ativo.get()}' AND tipo_operacao = 'COMPRA' ;"))[-1][0]
+        self.desconectar_banco()
         if self.entrada_tipo_operacao.get() == "COMPRA":
             return (float(self.calculo_operacao())/float(self.entrada_qtd_acoes.get()) + float(preco_ant))/2.0
         return float(preco_ant)
-        
 
     def limpar_tela(self):
         self.entrada_id_operacao.delete(0, END)
@@ -153,7 +156,8 @@ class funcoes:
         self.lista_operacoes.selection()
 
         for termo in self.lista_operacoes.selection():
-            col1, col2, col3, col4, col5, col6, col7, col8, col9, col10 = self.lista_operacoes.item(termo, 'values')
+            col1, col2, col3, col4, col5, col6, col7, col8, col9, col10 = self.lista_operacoes.item(
+                termo, 'values')
             self.entrada_id_operacao.insert(END, col1)
             self.entrada_codigo_ativo.insert(END, col2)
             self.entrada_data.insert(END, col3)
@@ -166,7 +170,8 @@ class funcoes:
     def apagar_operacao(self):
         self.variaveis()
         self.conectar_banco()
-        self.conector.execute('''DELETE FROM operacoes WHERE id_operacao = ?''', (self.id_oper))
+        self.conector.execute(
+            '''DELETE FROM operacoes WHERE id_operacao = ?''', (self.id_oper))
         self.conector.commit()
         self.desconectar_banco()
         self.limpar_tela()
@@ -177,7 +182,7 @@ class funcoes:
         self.conectar_banco()
         self.cursor.execute('''UPDATE operacoes SET codigo_operacao = ?, data = ?, qtd_acoes = ?, valor_unitario = ?, tipo_operacao = ?, taxa_corretagem = ?, taxa_b3 = ?, valor_operacao = ?, preco_medio = ?
             WHERE id_operacao = ?
-        ''', (self.cod_ativo, self.data, self.qtd, self.valor_unt, self.tipo_op, self.taxa_corr, self.tx_b3, self.valor_op, self.id_oper, self.preco_medio))
+        ''', (self.cod_ativo, self.data, self.qtd, self.valor_unt, self.tipo_op, self.taxa_corr, self.tx_b3, self.valor_op, self.preco_medio, self.id_oper))
         self.conector.commit()
         self.desconectar_banco()
         self.select_lista()
@@ -199,6 +204,7 @@ class funcoes:
         self.limpar_tela()
         self.desconectar_banco()
 
+
 class aplicativo(funcoes):
     def __init__(self):
         self.janela = janela
@@ -212,19 +218,26 @@ class aplicativo(funcoes):
         janela.mainloop()
 
     def tela(self):
-        self.janela.title('Cadastro de Operações')  # título da janela: aparece logo na barra de título
+        # título da janela: aparece logo na barra de título
+        self.janela.title('Cadastro de Operações')
         self.janela.configure(background='#1e3743')  # cor de fundo da janela
-        self.janela.geometry('700x500')  # tamanho inicial da janela altura = 700 x largura = 500
-        self.janela.resizable(True, True)  # responsividade da tela, True True quer dizer que a tela vai ser responsiva na altura e na largura
-        self.janela.maxsize(width=900, height=700)  # cria um limite máximo de tamanho que a janela pode ter, nesse caso 900x700
-        self.janela.minsize(width=400, height=300)  # cria um limite mínimo de tamanho que a janela pode ter, nesse caso 400x300
+        # tamanho inicial da janela altura = 700 x largura = 500
+        self.janela.geometry('700x500')
+        # responsividade da tela, True True quer dizer que a tela vai ser responsiva na altura e na largura
+        self.janela.resizable(True, True)
+        # cria um limite máximo de tamanho que a janela pode ter, nesse caso 900x700
+        self.janela.maxsize(width=900, height=700)
+        # cria um limite mínimo de tamanho que a janela pode ter, nesse caso 400x300
+        self.janela.minsize(width=400, height=300)
 
     def frames_de_tela(self):
         # criação dos frames dentro da janela
-        self.frame_1 = Frame(self.janela, bd=4, bg='#dfe3ee', highlightbackground='#759fe6', highlightthickness=3)
+        self.frame_1 = Frame(self.janela, bd=4, bg='#dfe3ee',
+                             highlightbackground='#759fe6', highlightthickness=3)
         self.frame_1.place(relx=0.02, rely=0.02, relwidth=0.96, relheight=0.47)
 
-        self.frame_2 = Frame(self.janela, bd=4, bg='#dfe3ee', highlightbackground='#759fe6', highlightthickness=3)
+        self.frame_2 = Frame(self.janela, bd=4, bg='#dfe3ee',
+                             highlightbackground='#759fe6', highlightthickness=3)
         self.frame_2.place(relx=0.02, rely=0.5, relwidth=0.96, relheight=0.46)
 
     def widgets_frame_1(self):
@@ -243,81 +256,97 @@ class aplicativo(funcoes):
 
         # BOTÕES =================================================================================
         # criação do botão limpar
-        self.btn_limpar = Button(self.aba1, text='Limpar', bd=2, bg='#107db2', fg='white', font=('verdana', 8, 'bold'), command=self.limpar_tela)
+        self.btn_limpar = Button(self.aba1, text='Limpar', bd=2, bg='#107db2', fg='white', font=(
+            'verdana', 8, 'bold'), command=self.limpar_tela)
         self.btn_limpar.place(relx=0.3, rely=0.1, relwidth=0.1, relheight=0.15)
 
         # criação do botão buscar
-        self.btn_buscar = Button(self.aba1, text='Buscar', bd=2, bg='#107db2', fg='white', font=('verdana', 8, 'bold'),command=self.buscar_operacao)
+        self.btn_buscar = Button(self.aba1, text='Buscar', bd=2, bg='#107db2', fg='white', font=(
+            'verdana', 8, 'bold'), command=self.buscar_operacao)
         self.btn_buscar.place(relx=0.4, rely=0.1, relwidth=0.1, relheight=0.15)
 
         # criação do botão novo
-        self.btn_guardar = Button(self.aba1, text='Guardar', bd=2, bg='#107db2', fg='white', font=('verdana', 8, 'bold'), command=self.adicionar_operacao)
-        self.btn_guardar.place(relx=0.6, rely=0.1, relwidth=0.1, relheight=0.15)
+        self.btn_guardar = Button(self.aba1, text='Guardar', bd=2, bg='#107db2', fg='white', font=(
+            'verdana', 8, 'bold'), command=self.adicionar_operacao)
+        self.btn_guardar.place(
+            relx=0.6, rely=0.1, relwidth=0.1, relheight=0.15)
 
         # criação do botão alterar
-        self.btn_alterar = Button(self.aba1, text='Alterar', bd=2, bg='#107db2', fg='white', font=('verdana', 8, 'bold'), command=self.alterar_operacao)
-        self.btn_alterar.place(relx=0.7, rely=0.1, relwidth=0.1, relheight=0.15)
+        self.btn_alterar = Button(self.aba1, text='Alterar', bd=2, bg='#107db2', fg='white', font=(
+            'verdana', 8, 'bold'), command=self.alterar_operacao)
+        self.btn_alterar.place(
+            relx=0.7, rely=0.1, relwidth=0.1, relheight=0.15)
 
         # criação do botão apagar
-        self.btn_apagar = Button(self.aba1, text='Apagar', bd=2, bg='#107db2', fg='white', font=('verdana', 8, 'bold'), command=self.apagar_operacao)
+        self.btn_apagar = Button(self.aba1, text='Apagar', bd=2, bg='#107db2', fg='white', font=(
+            'verdana', 8, 'bold'), command=self.apagar_operacao)
         self.btn_apagar.place(relx=0.8, rely=0.1, relwidth=0.1, relheight=0.15)
 
         # LABELS =================================================================================
 
         # criação do label ID operação
-        self.label_id_operacao = Label(self.aba1, text='ID Oper.', bg='#dfe3ee', fg='#1e3743')
+        self.label_id_operacao = Label(
+            self.aba1, text='ID Oper.', bg='#dfe3ee', fg='#1e3743')
         self.label_id_operacao.place(relx=0.19, rely=0.05)
 
         self.entrada_id_operacao = Entry(self.aba1)
         self.entrada_id_operacao.place(relx=0.19, rely=0.15, relwidth=0.10)
 
         # criação do label código ativo
-        self.label_codigo_ativo = Label(self.aba1, text='Cód. Ativo', bg='#dfe3ee', fg='#1e3743')
+        self.label_codigo_ativo = Label(
+            self.aba1, text='Cód. Ativo', bg='#dfe3ee', fg='#1e3743')
         self.label_codigo_ativo.place(relx=0.05, rely=0.05)
 
         self.entrada_codigo_ativo = Entry(self.aba1)
         self.entrada_codigo_ativo.place(relx=0.05, rely=0.15, relwidth=0.13)
 
         # criação do label quantidade de ações
-        self.label_qtd_acoes = Label(self.aba1, text='Quantidade de Ações', bg='#dfe3ee', fg='#1e3743')
+        self.label_qtd_acoes = Label(
+            self.aba1, text='Quantidade de Ações', bg='#dfe3ee', fg='#1e3743')
         self.label_qtd_acoes.place(relx=0.05, rely=0.31)
 
         self.entrada_qtd_acoes = Entry(self.aba1)
         self.entrada_qtd_acoes.place(relx=0.05, rely=0.41, relwidth=0.4)
 
         # criação do label valor unitário
-        self.label_valor_unitario = Label(self.aba1, text='Valor Unitário', bg='#dfe3ee', fg='#1e3743')
+        self.label_valor_unitario = Label(
+            self.aba1, text='Valor Unitário', bg='#dfe3ee', fg='#1e3743')
         self.label_valor_unitario.place(relx=0.5, rely=0.31)
 
         self.entrada_valor_unitario = Entry(self.aba1)
         self.entrada_valor_unitario.place(relx=0.5, rely=0.41, relwidth=0.4)
 
         # criação do label data
-        self.label_data = Label(self.aba1, text='Data', bg='#dfe3ee', fg='#1e3743')
+        self.label_data = Label(self.aba1, text='Data',
+                                bg='#dfe3ee', fg='#1e3743')
         self.label_data.place(relx=0.05, rely=0.54)
 
         self.entrada_data = Entry(self.aba1)
         self.entrada_data.place(relx=0.05, rely=0.64, relwidth=0.4)
 
         # criação do label tipo de operação
-        self.label_tipo_operacao = Label(self.aba1, text='Tipo de Operação', bg='#dfe3ee', fg='#1e3743')
+        self.label_tipo_operacao = Label(
+            self.aba1, text='Tipo de Operação', bg='#dfe3ee', fg='#1e3743')
         self.label_tipo_operacao.place(relx=0.5, rely=0.54)
 
         self.entrada_tipo_operacao = StringVar(self.aba1)
         self.opcoes = ('COMPRA', 'VENDA')
         self.entrada_tipo_operacao.set('COMPRA')
-        self.popupmenu = OptionMenu(self.aba1, self.entrada_tipo_operacao, *self.opcoes)
+        self.popupmenu = OptionMenu(
+            self.aba1, self.entrada_tipo_operacao, *self.opcoes)
         self.popupmenu.place(relx=0.5, rely=0.64, relwidth=0.4, relheight=0.13)
 
         # criação do label taxa corretagem
-        self.label_taxa_corretagem = Label(self.aba1, text='Taxa Corretagem', bg='#dfe3ee', fg='#1e3743')
+        self.label_taxa_corretagem = Label(
+            self.aba1, text='Taxa Corretagem', bg='#dfe3ee', fg='#1e3743')
         self.label_taxa_corretagem.place(relx=0.05, rely=0.78)
 
         self.entrada_taxa_corretagem = Entry(self.aba1)
         self.entrada_taxa_corretagem.place(relx=0.05, rely=0.88, relwidth=0.2)
 
         # criação do label taxa B3
-        self.label_taxa_b3 = Label(self.aba1, text='Taxa B3', bg='#dfe3ee', fg='#1e3743')
+        self.label_taxa_b3 = Label(
+            self.aba1, text='Taxa B3', bg='#dfe3ee', fg='#1e3743')
         self.label_taxa_b3.place(relx=0.5, rely=0.78)
 
         self.entrada_taxa_b3 = Entry(self.aba1)
@@ -325,7 +354,8 @@ class aplicativo(funcoes):
 
     def widgets_frame_2(self):
         # LISTAGEM COM A EXIBIÇÃO DOS DADOS
-        self.lista_operacoes = ttk.Treeview(self.frame_2, height=3, column=('coluna1', 'coluna2', 'coluna3', 'coluna4', 'coluna5', 'coluna6', 'coluna7', 'coluna8', 'coluna9', 'coluna10'))
+        self.lista_operacoes = ttk.Treeview(self.frame_2, height=3, column=(
+            'coluna1', 'coluna2', 'coluna3', 'coluna4', 'coluna5', 'coluna6', 'coluna7', 'coluna8', 'coluna9', 'coluna10'))
         self.lista_operacoes.heading('#0', text='')
         self.lista_operacoes.heading('#1', text='Id')
         self.lista_operacoes.heading('#2', text='Cód.')
@@ -351,12 +381,14 @@ class aplicativo(funcoes):
         self.lista_operacoes.column('#9', width=80)
         self.lista_operacoes.column('#10', width=60)
 
-        self.lista_operacoes.place(relx=0.01, rely=0.1, relwidth=0.95, relheight=0.85)
+        self.lista_operacoes.place(
+            relx=0.01, rely=0.1, relwidth=0.95, relheight=0.85)
 
         # criação da barra de rolagem
         self.barra_rolagem = Scrollbar(self.frame_2, orient='vertical')
         self.lista_operacoes.configure(yscroll=self.barra_rolagem.set)
-        self.barra_rolagem.place(relx=0.96, rely=0.1, relwidth=0.02, relheight=0.85)
+        self.barra_rolagem.place(
+            relx=0.96, rely=0.1, relwidth=0.02, relheight=0.85)
 
         self.lista_operacoes.bind('<Double-1>', self.duplo_clique)
 
@@ -377,5 +409,6 @@ class aplicativo(funcoes):
         menu_item1.add_command(label='Limpar Tela', command=self.limpar_tela)
         menu_item2.add_command(label='Sobre a Versão')
         # menu_item2.add_command(label='Ficha da Operação', command=self.relatorio_operacao)
-  
+
+
 aplicativo()
