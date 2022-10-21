@@ -55,10 +55,24 @@ janela = Tk()
 
 class funcoes:
     def calculo_operacao(self):
-        if self.entrada_tipo_operacao.get().upper() == 'COMPRA':
-            return  (float(self.entrada_qtd_acoes.get()) * float(self.entrada_valor_unitario.get())) + (float(self.entrada_taxa_corretagem.get()) + float(self.entrada_taxa_b3.get()))
-        if self.entrada_tipo_operacao.get().upper() == 'VENDA':
-            return  (float(self.entrada_qtd_acoes.get()) * float(self.entrada_valor_unitario.get())) - (float(self.entrada_taxa_corretagem.get()) + float(self.entrada_taxa_b3.get()))
+        if self.entrada_tipo_operacao.get() == 'COMPRA':
+            return  float(self.entrada_qtd_acoes.get()) * float(self.entrada_valor_unitario.get()) + float(self.entrada_taxa_corretagem.get()) + 0.0003 * float(self.entrada_qtd_acoes.get()) * float(self.entrada_valor_unitario.get())
+        if self.entrada_tipo_operacao.get() == 'VENDA':
+            return  (float(self.entrada_qtd_acoes.get()) * float(self.entrada_valor_unitario.get())) - (float(self.entrada_taxa_corretagem.get()) + 0.0003 * float(self.entrada_qtd_acoes.get()) * float(self.entrada_valor_unitario.get()))
+
+    def calculo_preco_medio(self):
+        self.conectar_banco()
+        quant = int(list(self.cursor.execute(f"SELECT COUNT(codigo_operacao) AS quantidade FROM operacoes WHERE codigo_operacao = '{self.entrada_codigo_ativo.get()}' and tipo_operacao = 'COMPRA';"))[0][0])
+        preco_ant = list(self.cursor.execute(f"SELECT MAX(preco_medio) FROM operacoes WHERE codigo_operacao = '{self.entrada_codigo_ativo.get()}' AND tipo_operacao = 'COMPRA' ;"))[0][0]
+        self.desconectar_banco()
+        if quant == 0:
+            if self.entrada_tipo_operacao.get() == "COMPRA":
+                return float(self.calculo_operacao())/float(self.entrada_qtd_acoes.get()) + float(preco_ant)
+            return 0
+        if self.entrada_tipo_operacao.get() == "COMPRA":
+            return (float(self.calculo_operacao())/float(self.entrada_qtd_acoes.get()) + float(preco_ant))/2.0
+        return float(preco_ant)
+        
 
     def limpar_tela(self):
         self.entrada_id_operacao.delete(0, END)
@@ -109,17 +123,16 @@ class funcoes:
         self.taxa_corr = self.entrada_taxa_corretagem.get()
         self.tx_b3 = self.entrada_taxa_b3.get()
         self.valor_op = self.calculo_operacao()
+        self.preco_medio = self.calculo_preco_medio()
 
     def adicionar_operacao(self):
         self.variaveis()
 
         self.conectar_banco()
 
-        self.cursor.execute('''INSERT INTO operacoes(codigo_operacao, data, qtd_acoes, valor_unitario, tipo_operacao, taxa_corretagem, taxa_b3, valor_operacao)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-            ''', (
-        self.cod_ativo, self.data, self.qtd, self.valor_unt, self.tipo_op, self.taxa_corr, self.tx_b3, self.valor_op))
-        self.preco_medio = 0
+        self.cursor.execute('''INSERT INTO operacoes(codigo_operacao, data, qtd_acoes, valor_unitario, tipo_operacao, taxa_corretagem, taxa_b3, valor_operacao, preco_medio)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ''', (self.cod_ativo, self.data, self.qtd, self.valor_unt, self.tipo_op, self.taxa_corr, self.tx_b3, self.valor_op, self.preco_medio))
         self.conector.commit()
         self.desconectar_banco()
         self.select_lista()
@@ -128,7 +141,7 @@ class funcoes:
     def select_lista(self):
         self.lista_operacoes.delete(*self.lista_operacoes.get_children())
         self.conectar_banco()
-        lista = self.cursor.execute('''SELECT id_operacao, codigo_operacao, data, qtd_acoes, valor_unitario, tipo_operacao, taxa_corretagem, taxa_b3, valor_operacao FROM operacoes
+        lista = self.cursor.execute('''SELECT id_operacao, codigo_operacao, data, qtd_acoes, valor_unitario, tipo_operacao, taxa_corretagem, taxa_b3, valor_operacao, preco_medio FROM operacoes
                 ORDER BY id_operacao ASC
             ''')
         for elemento in lista:
@@ -140,7 +153,7 @@ class funcoes:
         self.lista_operacoes.selection()
 
         for termo in self.lista_operacoes.selection():
-            col1, col2, col3, col4, col5, col6, col7, col8, col9 = self.lista_operacoes.item(termo, 'values')
+            col1, col2, col3, col4, col5, col6, col7, col8, col9, col10 = self.lista_operacoes.item(termo, 'values')
             self.entrada_id_operacao.insert(END, col1)
             self.entrada_codigo_ativo.insert(END, col2)
             self.entrada_data.insert(END, col3)
@@ -162,9 +175,9 @@ class funcoes:
     def alterar_operacao(self):
         self.variaveis()
         self.conectar_banco()
-        self.cursor.execute('''UPDATE operacoes SET codigo_operacao = ?, data = ?, qtd_acoes = ?, valor_unitario = ?, tipo_operacao = ?, taxa_corretagem = ?, taxa_b3 = ?, valor_operacao = ?
+        self.cursor.execute('''UPDATE operacoes SET codigo_operacao = ?, data = ?, qtd_acoes = ?, valor_unitario = ?, tipo_operacao = ?, taxa_corretagem = ?, taxa_b3 = ?, valor_operacao = ?, preco_medio = ?
             WHERE id_operacao = ?
-        ''', (self.cod_ativo, self.data, self.qtd, self.valor_unt, self.tipo_op, self.taxa_corr, self.tx_b3, self.valor_op, self.id_oper))
+        ''', (self.cod_ativo, self.data, self.qtd, self.valor_unt, self.tipo_op, self.taxa_corr, self.tx_b3, self.valor_op, self.id_oper, self.preco_medio))
         self.conector.commit()
         self.desconectar_banco()
         self.select_lista()
@@ -176,7 +189,7 @@ class funcoes:
 
         self.entrada_codigo_ativo.insert(END, '%')
         cod_do_ativo = self.entrada_codigo_ativo.get()
-        self.cursor.execute("""SELECT id_operacao, codigo_operacao, data, qtd_acoes, valor_unitario, tipo_operacao, taxa_corretagem, taxa_b3, valor_operacao FROM operacoes
+        self.cursor.execute("""SELECT id_operacao, codigo_operacao, data, qtd_acoes, valor_unitario, tipo_operacao, taxa_corretagem, taxa_b3, valor_operacao, preco_medio FROM operacoes
                         WHERE codigo_operacao LIKE '%s' ORDER BY codigo_operacao ASC
                     """ % cod_do_ativo)
 
@@ -185,13 +198,6 @@ class funcoes:
             self.lista_operacoes.insert('', END, values=op)
         self.limpar_tela()
         self.desconectar_banco()
-
-    def calcular_preco_medio(self):
-        self.variaveis()
-        if self.tipo_op == "COMPRA":
-            self.preco_medio += self.valor_op / self.qtd 
-        else:
-            self.preco_medio =
 
 class aplicativo(funcoes):
     def __init__(self):
@@ -319,7 +325,7 @@ class aplicativo(funcoes):
 
     def widgets_frame_2(self):
         # LISTAGEM COM A EXIBIÇÃO DOS DADOS
-        self.lista_operacoes = ttk.Treeview(self.frame_2, height=3, column=('coluna1', 'coluna2', 'coluna3', 'coluna4', 'coluna5', 'coluna6', 'coluna7', 'coluna8', 'coluna9'))
+        self.lista_operacoes = ttk.Treeview(self.frame_2, height=3, column=('coluna1', 'coluna2', 'coluna3', 'coluna4', 'coluna5', 'coluna6', 'coluna7', 'coluna8', 'coluna9', 'coluna10'))
         self.lista_operacoes.heading('#0', text='')
         self.lista_operacoes.heading('#1', text='Id')
         self.lista_operacoes.heading('#2', text='Cód.')
@@ -330,18 +336,20 @@ class aplicativo(funcoes):
         self.lista_operacoes.heading('#7', text='Taxa')
         self.lista_operacoes.heading('#8', text='Tx. B3')
         self.lista_operacoes.heading('#9', text='Valor Op.')
+        self.lista_operacoes.heading('#10', text='P. Med.')
 
         # a soma dos widths da lista com exceção do item 0, tem que dar 500
         self.lista_operacoes.column('#0', width=1)
-        self.lista_operacoes.column('#1', width=25)
-        self.lista_operacoes.column('#2', width=55)
-        self.lista_operacoes.column('#3', width=70)
+        self.lista_operacoes.column('#1', width=20)
+        self.lista_operacoes.column('#2', width=50)
+        self.lista_operacoes.column('#3', width=75)
         self.lista_operacoes.column('#4', width=25)
         self.lista_operacoes.column('#5', width=50)
-        self.lista_operacoes.column('#6', width=100)
+        self.lista_operacoes.column('#6', width=65)
         self.lista_operacoes.column('#7', width=30)
         self.lista_operacoes.column('#8', width=45)
-        self.lista_operacoes.column('#9', width=100)
+        self.lista_operacoes.column('#9', width=80)
+        self.lista_operacoes.column('#10', width=60)
 
         self.lista_operacoes.place(relx=0.01, rely=0.1, relwidth=0.95, relheight=0.85)
 
@@ -369,61 +377,5 @@ class aplicativo(funcoes):
         menu_item1.add_command(label='Limpar Tela', command=self.limpar_tela)
         menu_item2.add_command(label='Sobre a Versão')
         # menu_item2.add_command(label='Ficha da Operação', command=self.relatorio_operacao)
-
-aplicativo()
-
-
-    def widgets_frame_2(self):
-        # LISTAGEM COM A EXIBIÇÃO DOS DADOS
-        self.lista_operacoes = ttk.Treeview(self.frame_2, height=3, column=('coluna1', 'coluna2', 'coluna3', 'coluna4', 'coluna5', 'coluna6', 'coluna7', 'coluna8', 'coluna9'))
-        self.lista_operacoes.heading('#0', text='')
-        self.lista_operacoes.heading('#1', text='Id')
-        self.lista_operacoes.heading('#2', text='Cód.')
-        self.lista_operacoes.heading('#3', text='Data')
-        self.lista_operacoes.heading('#4', text='Qtd')
-        self.lista_operacoes.heading('#5', text='Valor')
-        self.lista_operacoes.heading('#6', text='Tipo Op.')
-        self.lista_operacoes.heading('#7', text='Taxa')
-        self.lista_operacoes.heading('#8', text='Tx. B3')
-        self.lista_operacoes.heading('#9', text='Valor Op.')
-
-        # a soma dos widths da lista com exceção do item 0, tem que dar 500
-        self.lista_operacoes.column('#0', width=1)
-        self.lista_operacoes.column('#1', width=25)
-        self.lista_operacoes.column('#2', width=55)
-        self.lista_operacoes.column('#3', width=70)
-        self.lista_operacoes.column('#4', width=25)
-        self.lista_operacoes.column('#5', width=50)
-        self.lista_operacoes.column('#6', width=100)
-        self.lista_operacoes.column('#7', width=30)
-        self.lista_operacoes.column('#8', width=45)
-        self.lista_operacoes.column('#9', width=100)
-
-        self.lista_operacoes.place(relx=0.01, rely=0.1, relwidth=0.95, relheight=0.85)
-
-        # criação da barra de rolagem
-        self.barra_rolagem = Scrollbar(self.frame_2, orient='vertical')
-        self.lista_operacoes.configure(yscroll=self.barra_rolagem.set)
-        self.barra_rolagem.place(relx=0.96, rely=0.1, relwidth=0.02, relheight=0.85)
-
-        self.lista_operacoes.bind('<Double-1>', self.duplo_clique)
-
-    def menus(self):
-        barra_menu = Menu(self.janela)
-        self.janela.config(menu=barra_menu)
-        menu_item1 = Menu(barra_menu)
-        menu_item2 = Menu(barra_menu)
-        menu_item3 = Menu(barra_menu)
-
-        def sair(): self.janela.destroy()
-
-        barra_menu.add_cascade(label='Opções', menu=menu_item1)
-        barra_menu.add_cascade(label='Sobre', menu=menu_item2)
-        # barra_menu.add_cascade(label='Relatórios', menu=menu_item2)
-
-        menu_item1.add_command(label='Sair', command=sair)
-        menu_item1.add_command(label='Limpar Tela', command=self.limpar_tela)
-        menu_item2.add_command(label='Sobre a Versão')
-        # menu_item2.add_command(label='Ficha da Operação', command=self.relatorio_operacao)
-
+  
 aplicativo()
