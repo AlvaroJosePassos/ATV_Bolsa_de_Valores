@@ -55,11 +55,16 @@ janela = Tk()
 
 
 class funcoes:
+    def calculo_taxa_b3(self):
+        return round(0.0003 * float(self.entrada_qtd_acoes.get()) * float(self.entrada_valor_unitario.get()), 2)
+
     def calculo_operacao(self):
+        valor_taxa_b3 = self.calculo_taxa_b3()
+
         if self.entrada_tipo_operacao.get() == 'COMPRA':
-            return float(self.entrada_qtd_acoes.get()) * float(self.entrada_valor_unitario.get()) + float(self.entrada_taxa_corretagem.get()) + 0.0003 * float(self.entrada_qtd_acoes.get()) * float(self.entrada_valor_unitario.get())
+            return round(float(self.entrada_qtd_acoes.get()) * float(self.entrada_valor_unitario.get()) + float(self.entrada_taxa_corretagem.get()) + valor_taxa_b3, 2)
         if self.entrada_tipo_operacao.get() == 'VENDA':
-            return (float(self.entrada_qtd_acoes.get()) * float(self.entrada_valor_unitario.get())) - (float(self.entrada_taxa_corretagem.get()) + 0.0003 * float(self.entrada_qtd_acoes.get()) * float(self.entrada_valor_unitario.get()))
+            return round(float(self.entrada_qtd_acoes.get()) * float(self.entrada_valor_unitario.get()) - float(self.entrada_taxa_corretagem.get()) + valor_taxa_b3, 2)
 
     def calculo_preco_medio(self):
         self.conectar_banco()
@@ -68,23 +73,21 @@ class funcoes:
         if quant == 0:
             self.desconectar_banco()
             if self.entrada_tipo_operacao.get() == "COMPRA":
-                return float(self.calculo_operacao())/float(self.entrada_qtd_acoes.get())
+                return round(float(self.calculo_operacao())/float(self.entrada_qtd_acoes.get()), 2)
             return 0
         preco_ant = list(self.cursor.execute(
             f"SELECT preco_medio FROM operacoes GROUP BY id_operacao HAVING codigo_operacao = '{self.entrada_codigo_ativo.get()}' AND tipo_operacao = 'COMPRA' ;"))[-1][0]
         self.desconectar_banco()
         if self.entrada_tipo_operacao.get() == "COMPRA":
-            return (float(self.calculo_operacao())/float(self.entrada_qtd_acoes.get()) + float(preco_ant))/2.0
+            return round((float(self.calculo_operacao())/float(self.entrada_qtd_acoes.get()) + float(preco_ant))/2.0, 2)
         return float(preco_ant)
 
     def limpar_tela(self):
         self.entrada_id_operacao.delete(0, END)
-        self.entrada_codigo_ativo.delete(0, END)
         self.entrada_data.delete(0, END)
         self.entrada_qtd_acoes.delete(0, END)
         self.entrada_valor_unitario.delete(0, END)
         self.entrada_taxa_corretagem.delete(0, END)
-        self.entrada_taxa_b3.delete(0, END)
 
     def conectar_banco(self):
         self.conector = sqlite3.connect('bolsa_de_valores.bd')
@@ -119,12 +122,11 @@ class funcoes:
         self.id_oper = self.entrada_id_operacao.get()
         self.cod_ativo = self.entrada_codigo_ativo.get()
         self.data = self.entrada_data.get()
-        #self.data = self.data_operacao
         self.qtd = self.entrada_qtd_acoes.get()
         self.valor_unt = self.entrada_valor_unitario.get()
         self.tipo_op = self.entrada_tipo_operacao.get().upper()
         self.taxa_corr = self.entrada_taxa_corretagem.get()
-        self.tx_b3 = self.entrada_taxa_b3.get()
+        self.tx_b3 = self.calculo_taxa_b3()
         self.valor_op = self.calculo_operacao()
         self.preco_medio = self.calculo_preco_medio()
 
@@ -156,22 +158,19 @@ class funcoes:
         self.lista_operacoes.selection()
 
         for termo in self.lista_operacoes.selection():
-            col1, col2, col3, col4, col5, col6, col7, col8, col9, col10 = self.lista_operacoes.item(
-                termo, 'values')
+            col1, col2, col3, col4, col5, col6, col7, col8, col9, col10 = self.lista_operacoes.item(termo, 'values')
             self.entrada_id_operacao.insert(END, col1)
-            self.entrada_codigo_ativo.insert(END, col2)
+            self.entrada_codigo_ativo.set(col2)
             self.entrada_data.insert(END, col3)
             self.entrada_qtd_acoes.insert(END, col4)
             self.entrada_valor_unitario.insert(END, col5)
             self.entrada_tipo_operacao.set(col6)
             self.entrada_taxa_corretagem.insert(END, col7)
-            self.entrada_taxa_b3.insert(END, col8)
 
     def apagar_operacao(self):
         self.variaveis()
         self.conectar_banco()
-        self.conector.execute(
-            '''DELETE FROM operacoes WHERE id_operacao = ?''', (self.id_oper))
+        self.conector.execute('''DELETE FROM operacoes WHERE id_operacao = ?''', (self.id_oper))
         self.conector.commit()
         self.desconectar_banco()
         self.limpar_tela()
@@ -192,7 +191,6 @@ class funcoes:
         self.conectar_banco()
         self.lista_operacoes.delete(*self.lista_operacoes.get_children())
 
-        self.entrada_codigo_ativo.insert(END, '%')
         cod_do_ativo = self.entrada_codigo_ativo.get()
         self.cursor.execute("""SELECT id_operacao, codigo_operacao, data, qtd_acoes, valor_unitario, tipo_operacao, taxa_corretagem, taxa_b3, valor_operacao, preco_medio FROM operacoes
                         WHERE codigo_operacao LIKE '%s' ORDER BY codigo_operacao ASC
@@ -228,7 +226,7 @@ class aplicativo(funcoes):
         # cria um limite máximo de tamanho que a janela pode ter, nesse caso 900x700
         self.janela.maxsize(width=900, height=700)
         # cria um limite mínimo de tamanho que a janela pode ter, nesse caso 400x300
-        self.janela.minsize(width=400, height=300)
+        self.janela.minsize(width=700, height=500)
 
     def frames_de_tela(self):
         # criação dos frames dentro da janela
@@ -293,12 +291,22 @@ class aplicativo(funcoes):
         self.entrada_id_operacao.place(relx=0.19, rely=0.15, relwidth=0.10)
 
         # criação do label código ativo
-        self.label_codigo_ativo = Label(
+        '''self.label_codigo_ativo = Label(
             self.aba1, text='Cód. Ativo', bg='#dfe3ee', fg='#1e3743')
         self.label_codigo_ativo.place(relx=0.05, rely=0.05)
 
         self.entrada_codigo_ativo = Entry(self.aba1)
-        self.entrada_codigo_ativo.place(relx=0.05, rely=0.15, relwidth=0.13)
+        self.entrada_codigo_ativo.place(relx=0.05, rely=0.15, relwidth=0.13)'''
+
+        # criação do label código ativo
+        self.label_codigo_ativo = Label(self.aba1, text='Cód. Ativo', bg='#dfe3ee', fg='#1e3743')
+        self.label_codigo_ativo.place(relx=0.05, rely=0.05)
+
+        self.entrada_codigo_ativo = StringVar(self.aba1)
+        self.ativos = ('VALE3', 'PETR4', 'ELET3', 'ITUB4', 'BBSA3', 'PETR3', 'B3SA3', 'BBDC4', 'CIEL3', 'NTCO3', 'TIMS3')
+        self.entrada_codigo_ativo.set('VALE3')
+        self.popup_menu_ativos = OptionMenu(self.aba1, self.entrada_codigo_ativo, *self.ativos)
+        self.popup_menu_ativos.place(relx=0.05, rely=0.15, relwidth=0.13, relheight=0.12)
 
         # criação do label quantidade de ações
         self.label_qtd_acoes = Label(
@@ -332,9 +340,8 @@ class aplicativo(funcoes):
         self.entrada_tipo_operacao = StringVar(self.aba1)
         self.opcoes = ('COMPRA', 'VENDA')
         self.entrada_tipo_operacao.set('COMPRA')
-        self.popupmenu = OptionMenu(
-            self.aba1, self.entrada_tipo_operacao, *self.opcoes)
-        self.popupmenu.place(relx=0.5, rely=0.64, relwidth=0.4, relheight=0.13)
+        self.popup_menu_tipo_op = OptionMenu(self.aba1, self.entrada_tipo_operacao, *self.opcoes)
+        self.popup_menu_tipo_op.place(relx=0.5, rely=0.64, relwidth=0.4, relheight=0.13)
 
         # criação do label taxa corretagem
         self.label_taxa_corretagem = Label(
@@ -345,12 +352,20 @@ class aplicativo(funcoes):
         self.entrada_taxa_corretagem.place(relx=0.05, rely=0.88, relwidth=0.2)
 
         # criação do label taxa B3
-        self.label_taxa_b3 = Label(
+        '''self.label_taxa_b3 = Label(
             self.aba1, text='Taxa B3', bg='#dfe3ee', fg='#1e3743')
         self.label_taxa_b3.place(relx=0.5, rely=0.78)
 
         self.entrada_taxa_b3 = Entry(self.aba1)
-        self.entrada_taxa_b3.place(relx=0.5, rely=0.88, relwidth=0.2)
+        self.entrada_taxa_b3.place(relx=0.5, rely=0.88, relwidth=0.2)'''
+
+        # criação do label preço médio atual
+        self.label_preco_medio_atual = Label(
+            self.aba1, text='Preço Médio Atual', bg='#dfe3ee', fg='#1e3743')
+        self.label_preco_medio_atual.place(relx=0.5, rely=0.78)
+
+        self.entrada_preco_medio_atual = Entry(self.aba1)
+        self.entrada_preco_medio_atual.place(relx=0.5, rely=0.88, relwidth=0.2)
 
     def widgets_frame_2(self):
         # LISTAGEM COM A EXIBIÇÃO DOS DADOS
