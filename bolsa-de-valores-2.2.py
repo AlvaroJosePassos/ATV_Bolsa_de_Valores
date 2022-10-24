@@ -1,62 +1,15 @@
 from tkinter import *
 import sqlite3
-import tkinter
-from tkinter import scrolledtext, ttk
+from tkinter import scrolledtext, ttk, messagebox
+from tkcalendar import Calendar, DateEntry
 
 janela = Tk()
 
-'''class relatorios():
-    def imprimir_operacao(self):
-        webbrowser.open('operacao.pdf')
-
-    def relatorio_operacao(self):
-        self.operacao = canvas.Canvas('operacao.pdf')
-
-        self.relat_id_oper = self.entrada_id_operacao.get()
-        self.relat_cod_ativo = self.entrada_codigo_ativo.get()
-        self.relat_data = self.entrada_data.get()
-        self.relat_qtd = self.entrada_qtd_acoes.get()
-        self.relat_valor_unt = self.entrada_valor_unitario.get()
-        self.relat_tipo_op = self.entrada_tipo_operacao.get().upper()
-        self.relat_taxa_corr = self.entrada_taxa_corretagem.get()
-        self.relat_tx_b3 = self.entrada_taxa_b3.get()
-        self.relat_valor_op = self.calculo_operacao()
-
-        self.operacao.setFont('Helvetica-Bold', 20)
-        self.operacao.drawString(200, 790, 'Ficha de Operação')
-
-        self.operacao.setFont('Helvetica-Bold', 15)
-        self.operacao.drawString(50, 700, 'Id Operação')
-        self.operacao.drawString(50, 680, 'Cód Ativo')
-        self.operacao.drawString(50, 660, 'Data Operação')
-        self.operacao.drawString(50, 640, 'Quantidade Ações')
-        self.operacao.drawString(50, 620, 'Valor Unitário')
-        self.operacao.drawString(50, 600, 'Tipo Operação')
-        self.operacao.drawString(50, 580, 'Taxa Corretagem')
-        self.operacao.drawString(50, 560, 'Taxa B3')
-        self.operacao.drawString(50, 540, 'Valor Operação')
-
-        self.operacao.setFont('Helvetica-Bold', 15)
-        self.operacao.drawString(180, 700, self.relat_id_oper)
-        self.operacao.drawString(180, 680, self.relat_cod_ativo)
-        self.operacao.drawString(180, 660, self.relat_data)
-        self.operacao.drawString(180, 640, self.relat_qtd)
-        self.operacao.drawString(180, 620, self.relat_valor_unt)
-        self.operacao.drawString(180, 600, self.relat_tipo_op)
-        self.operacao.drawString(180, 580, self.relat_taxa_corr)
-        self.operacao.drawString(180, 560, self.relat_tx_b3)
-        self.operacao.drawString(180, 5400, self.relat_valor_op)
-
-        self.operacao.rect(20, 550, 550, 2, fill=True, stroke=False)
-
-        self.operacao.showPage()
-        self.operacao.save()
-        self.imprimir_operacao()'''
-
-
 class funcoes:
     def calculo_taxa_b3(self):
-        return round(0.0003 * float(self.entrada_qtd_acoes.get()) * float(self.entrada_valor_unitario.get()), 2)
+        quant_acoes = float(self.entrada_qtd_acoes.get())
+        valor_unit = float(self.entrada_valor_unitario.get())
+        return round(0.0003 * quant_acoes * valor_unit, 2)
 
     def calculo_operacao(self):
         valor_taxa_b3 = self.calculo_taxa_b3()
@@ -68,15 +21,13 @@ class funcoes:
 
     def calculo_preco_medio(self):
         self.conectar_banco()
-        quant = int(list(self.cursor.execute(
-            f"SELECT COUNT(codigo_operacao) AS quantidade FROM operacoes WHERE codigo_operacao = '{self.entrada_codigo_ativo.get()}' AND tipo_operacao = 'COMPRA';"))[0][0])
+        quant = int(list(self.cursor.execute(f"SELECT COUNT(codigo_operacao) AS quantidade FROM operacoes WHERE codigo_operacao = '{self.entrada_codigo_ativo.get()}' AND tipo_operacao = 'COMPRA';"))[0][0])
         if quant == 0:
             self.desconectar_banco()
             if self.entrada_tipo_operacao.get() == "COMPRA":
                 return round(float(self.calculo_operacao())/float(self.entrada_qtd_acoes.get()), 2)
             return 0
-        preco_ant = list(self.cursor.execute(
-            f"SELECT preco_medio FROM operacoes GROUP BY id_operacao HAVING codigo_operacao = '{self.entrada_codigo_ativo.get()}' AND tipo_operacao = 'COMPRA' ;"))[-1][0]
+        preco_ant = list(self.cursor.execute(f"SELECT preco_medio FROM operacoes GROUP BY id_operacao HAVING codigo_operacao = '{self.entrada_codigo_ativo.get()}' AND tipo_operacao = 'COMPRA' ;"))[-1][0]
         self.desconectar_banco()
         if self.entrada_tipo_operacao.get() == "COMPRA":
             return round((float(self.calculo_operacao())/float(self.entrada_qtd_acoes.get()) + float(preco_ant))/2.0, 2)
@@ -133,15 +84,20 @@ class funcoes:
     def adicionar_operacao(self):
         self.variaveis()
 
-        self.conectar_banco()
+        # comando não é executado por que dá problema no cálculo da taxa da B3
+        if self.id_oper == None and self.cod_ativo == None and self.data == None and self.qtd == None and self.valor_unt == None and self.tipo_op == None and self.taxa_corr == None:
+            mensagem = 'Para cadastrar uma operação, preencha todos os campos obrigatórios!'
+            messagebox.showinfo('Informação de Erro', mensagem)
+        else:
+            self.conectar_banco()
 
-        self.cursor.execute('''INSERT INTO operacoes(codigo_operacao, data, qtd_acoes, valor_unitario, tipo_operacao, taxa_corretagem, taxa_b3, valor_operacao, preco_medio)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-            ''', (self.cod_ativo, self.data, self.qtd, self.valor_unt, self.tipo_op, self.taxa_corr, self.tx_b3, self.valor_op, self.preco_medio))
-        self.conector.commit()
-        self.desconectar_banco()
-        self.select_lista()
-        self.limpar_tela()
+            self.cursor.execute('''INSERT INTO operacoes(codigo_operacao, data, qtd_acoes, valor_unitario, tipo_operacao, taxa_corretagem, taxa_b3, valor_operacao, preco_medio)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                ''', (self.cod_ativo, self.data, self.qtd, self.valor_unt, self.tipo_op, self.taxa_corr, self.tx_b3, self.valor_op, self.preco_medio))
+            self.conector.commit()
+            self.desconectar_banco()
+            self.select_lista()
+            self.limpar_tela()
 
     def select_lista(self):
         self.lista_operacoes.delete(*self.lista_operacoes.get_children())
@@ -202,6 +158,18 @@ class funcoes:
         self.limpar_tela()
         self.desconectar_banco()
 
+    def exibir_calendario(self):
+        self.calendario = Calendar(self.aba1, fg='gray75', bg='blue', font=('verdana', 8, 'bold'), locale='pt_br')
+        self.calendario.place(relx=0.5, rely=0.1)
+        self.gravar_data = Button(self.aba1, text='Inserir data', bd=2, bg='red', fg='white', font=('verdana', 8, 'bold'), command=self.imprimir_data)
+        self.gravar_data.place(relx=0.26, rely=0.64, relheight=0.10)
+
+    def imprimir_data(self):
+        data = self.calendario.get_date()
+        self.calendario.destroy()
+        self.entrada_data.delete(0, END)
+        self.entrada_data.insert(END, data)
+        self.gravar_data.destroy()
 
 class aplicativo(funcoes):
     def __init__(self):
@@ -291,14 +259,6 @@ class aplicativo(funcoes):
         self.entrada_id_operacao.place(relx=0.19, rely=0.15, relwidth=0.10)
 
         # criação do label código ativo
-        '''self.label_codigo_ativo = Label(
-            self.aba1, text='Cód. Ativo', bg='#dfe3ee', fg='#1e3743')
-        self.label_codigo_ativo.place(relx=0.05, rely=0.05)
-
-        self.entrada_codigo_ativo = Entry(self.aba1)
-        self.entrada_codigo_ativo.place(relx=0.05, rely=0.15, relwidth=0.13)'''
-
-        # criação do label código ativo
         self.label_codigo_ativo = Label(self.aba1, text='Cód. Ativo', bg='#dfe3ee', fg='#1e3743')
         self.label_codigo_ativo.place(relx=0.05, rely=0.05)
 
@@ -324,13 +284,15 @@ class aplicativo(funcoes):
         self.entrada_valor_unitario = Entry(self.aba1)
         self.entrada_valor_unitario.place(relx=0.5, rely=0.41, relwidth=0.4)
 
-        # criação do label data
-        self.label_data = Label(self.aba1, text='Data',
-                                bg='#dfe3ee', fg='#1e3743')
+        # criação do label data com calendário
+        self.label_data = Label(self.aba1, text='Data', bg='#dfe3ee', fg='#1e3743')
         self.label_data.place(relx=0.05, rely=0.54)
 
-        self.entrada_data = Entry(self.aba1)
-        self.entrada_data.place(relx=0.05, rely=0.64, relwidth=0.4)
+        self.botao_data = Button(self.aba1, text='Selecione', bd=2, bg='#107db2', fg='white', font=('verdana', 8, 'bold'), command=self.exibir_calendario)
+        self.botao_data.place(relx=0.26, rely=0.64, relheight=0.10)
+
+        self.entrada_data = Entry(self.aba1, width=10)
+        self.entrada_data.place(relx=0.05, rely=0.64, relwidth=0.2)
 
         # criação do label tipo de operação
         self.label_tipo_operacao = Label(
@@ -369,8 +331,7 @@ class aplicativo(funcoes):
 
     def widgets_frame_2(self):
         # LISTAGEM COM A EXIBIÇÃO DOS DADOS
-        self.lista_operacoes = ttk.Treeview(self.frame_2, height=3, column=(
-            'coluna1', 'coluna2', 'coluna3', 'coluna4', 'coluna5', 'coluna6', 'coluna7', 'coluna8', 'coluna9', 'coluna10'))
+        self.lista_operacoes = ttk.Treeview(self.frame_2, height=3, column=('coluna1', 'coluna2', 'coluna3', 'coluna4', 'coluna5', 'coluna6', 'coluna7', 'coluna8', 'coluna9', 'coluna10'))
         self.lista_operacoes.heading('#0', text='')
         self.lista_operacoes.heading('#1', text='Id')
         self.lista_operacoes.heading('#2', text='Cód.')
@@ -425,5 +386,14 @@ class aplicativo(funcoes):
         menu_item2.add_command(label='Sobre a Versão')
         # menu_item2.add_command(label='Ficha da Operação', command=self.relatorio_operacao)
 
+    def janela_calendario(self):
+        self.janela_cal = Toplevel()
+        self.janela_cal.title('Inserir data')
+        self.janela_cal.configure(background='gray75')
+        self.janela_cal.geometry('400x400')
+        self.janela_cal.resizable(False, False)
+        self.janela_cal.transient(self.janela)
+        self.janela_cal.focus_force()
+        self.janela_cal.grab_set()
 
 aplicativo()
