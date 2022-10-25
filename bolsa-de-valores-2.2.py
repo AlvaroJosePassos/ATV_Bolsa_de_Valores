@@ -5,6 +5,16 @@ from tkcalendar import Calendar, DateEntry
 
 janela = Tk()
 
+class validadores:
+    def validar_campo(self, info):
+        if info == '':
+            return True
+        try:
+            valor = float(info)
+        except ValueError:
+            return False
+        return valor
+
 class funcoes:
     def calculo_taxa_b3(self):
         quant_acoes = float(self.entrada_qtd_acoes.get())
@@ -34,11 +44,13 @@ class funcoes:
         return float(preco_ant)
 
     def limpar_tela(self):
+        self.entrada_data.config(state='normal')
         self.entrada_id_operacao.delete(0, END)
         self.entrada_data.delete(0, END)
         self.entrada_qtd_acoes.delete(0, END)
         self.entrada_valor_unitario.delete(0, END)
         self.entrada_taxa_corretagem.delete(0, END)
+        self.entrada_data.config(state='disable')
 
     def conectar_banco(self):
         self.conector = sqlite3.connect('bolsa_de_valores.bd')
@@ -82,7 +94,6 @@ class funcoes:
         self.preco_medio = self.calculo_preco_medio()
 
     def adicionar_operacao(self):
-        # comando não é executado por que dá problema no cálculo da taxa da B3
         if self.entrada_qtd_acoes.get() == "" or self.entrada_valor_unitario.get() == "" or self.entrada_data.get() == "" or self.entrada_taxa_corretagem.get() == "":
             mensagem = 'Para cadastrar uma operação, preencha todos os campos obrigatórios!'
             messagebox.showinfo('Informação de Erro', mensagem)
@@ -113,6 +124,7 @@ class funcoes:
         self.lista_operacoes.selection()
 
         for termo in self.lista_operacoes.selection():
+            self.entrada_data.config(state='normal')
             col1, col2, col3, col4, col5, col6, col7, col8, col9, col10 = self.lista_operacoes.item(termo, 'values')
             self.entrada_id_operacao.insert(END, col1)
             self.entrada_codigo_ativo.set(col2)
@@ -121,6 +133,7 @@ class funcoes:
             self.entrada_valor_unitario.insert(END, col5)
             self.entrada_tipo_operacao.set(col6)
             self.entrada_taxa_corretagem.insert(END, col7)
+            self.entrada_data.config(state='disable')
 
     def apagar_operacao(self):
         self.variaveis()
@@ -166,13 +179,16 @@ class funcoes:
     def imprimir_data(self):
         data = self.calendario.get_date()
         self.calendario.destroy()
+        self.entrada_data.config(state = 'normal')
         self.entrada_data.delete(0, END)
         self.entrada_data.insert(END, data)
         self.gravar_data.destroy()
+        self.entrada_data.config(state='disable')
 
-class aplicativo(funcoes):
+class aplicativo(funcoes, validadores):
     def __init__(self):
         self.janela = janela
+        self.validar_entrada()
         self.tela()
         self.frames_de_tela()
         self.widgets_frame_1()
@@ -272,7 +288,7 @@ class aplicativo(funcoes):
             self.aba1, text='Quantidade de Ações', bg='#dfe3ee', fg='#1e3743')
         self.label_qtd_acoes.place(relx=0.05, rely=0.31)
 
-        self.entrada_qtd_acoes = Entry(self.aba1)
+        self.entrada_qtd_acoes = Entry(self.aba1, validate='key', validatecommand=self.validacao)
         self.entrada_qtd_acoes.place(relx=0.05, rely=0.41, relwidth=0.4)
 
         # criação do label valor unitário
@@ -280,7 +296,7 @@ class aplicativo(funcoes):
             self.aba1, text='Valor Unitário', bg='#dfe3ee', fg='#1e3743')
         self.label_valor_unitario.place(relx=0.5, rely=0.31)
 
-        self.entrada_valor_unitario = Entry(self.aba1)
+        self.entrada_valor_unitario = Entry(self.aba1, validate='key', validatecommand=self.validacao)
         self.entrada_valor_unitario.place(relx=0.5, rely=0.41, relwidth=0.4)
 
         # criação do label data com calendário
@@ -290,7 +306,7 @@ class aplicativo(funcoes):
         self.botao_data = Button(self.aba1, text='Selecione', bd=2, bg='#107db2', fg='white', font=('verdana', 8, 'bold'), command=self.exibir_calendario)
         self.botao_data.place(relx=0.26, rely=0.64, relheight=0.10)
 
-        self.entrada_data = Entry(self.aba1, width=10)
+        self.entrada_data = Entry(self.aba1, width=10, state='disable')
         self.entrada_data.place(relx=0.05, rely=0.64, relwidth=0.2)
 
         # criação do label tipo de operação
@@ -309,7 +325,7 @@ class aplicativo(funcoes):
             self.aba1, text='Taxa Corretagem', bg='#dfe3ee', fg='#1e3743')
         self.label_taxa_corretagem.place(relx=0.05, rely=0.78)
 
-        self.entrada_taxa_corretagem = Entry(self.aba1)
+        self.entrada_taxa_corretagem = Entry(self.aba1, validate='key', validatecommand=self.validacao)
         self.entrada_taxa_corretagem.place(relx=0.05, rely=0.88, relwidth=0.2)
 
         # criação do label taxa B3
@@ -393,5 +409,8 @@ class aplicativo(funcoes):
         self.janela_cal.transient(self.janela)
         self.janela_cal.focus_force()
         self.janela_cal.grab_set()
+
+    def validar_entrada(self):
+        self.validacao = (self.janela.register(self.validar_campo), '%P')
 
 aplicativo()
