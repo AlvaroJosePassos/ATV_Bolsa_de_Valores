@@ -82,19 +82,18 @@ class funcoes:
         self.preco_medio = self.calculo_preco_medio()
 
     def adicionar_operacao(self):
-        self.variaveis()
-
         # comando não é executado por que dá problema no cálculo da taxa da B3
-        if self.id_oper == None and self.cod_ativo == None and self.data == None and self.qtd == None and self.valor_unt == None and self.tipo_op == None and self.taxa_corr == None:
+        if self.entrada_qtd_acoes.get() == "" or self.entrada_valor_unitario.get() == "" or self.entrada_data.get() == "" or self.entrada_taxa_corretagem.get() == "":
             mensagem = 'Para cadastrar uma operação, preencha todos os campos obrigatórios!'
             messagebox.showinfo('Informação de Erro', mensagem)
         else:
+            self.variaveis()
             self.conectar_banco()
-
             self.cursor.execute('''INSERT INTO operacoes(codigo_operacao, data, qtd_acoes, valor_unitario, tipo_operacao, taxa_corretagem, taxa_b3, valor_operacao, preco_medio)
                     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
                 ''', (self.cod_ativo, self.data, self.qtd, self.valor_unt, self.tipo_op, self.taxa_corr, self.tx_b3, self.valor_op, self.preco_medio))
             self.conector.commit()
+            self.label_preco_medio_atual.config(text = f'Ultimo Preço Medio Adicionado: {self.preco_medio}')
             self.desconectar_banco()
             self.select_lista()
             self.limpar_tela()
@@ -317,17 +316,16 @@ class aplicativo(funcoes):
         '''self.label_taxa_b3 = Label(
             self.aba1, text='Taxa B3', bg='#dfe3ee', fg='#1e3743')
         self.label_taxa_b3.place(relx=0.5, rely=0.78)
-
         self.entrada_taxa_b3 = Entry(self.aba1)
         self.entrada_taxa_b3.place(relx=0.5, rely=0.88, relwidth=0.2)'''
 
         # criação do label preço médio atual
         self.label_preco_medio_atual = Label(
-            self.aba1, text='Preço Médio Atual', bg='#dfe3ee', fg='#1e3743')
-        self.label_preco_medio_atual.place(relx=0.5, rely=0.78)
+            self.aba1, text= f'Ultimo Preço Médio Adicionado: ', bg='#dfe3ee', fg='#1e3743')
+        self.label_preco_medio_atual.place(relx=0.5, rely=0.85)
 
-        self.entrada_preco_medio_atual = Entry(self.aba1)
-        self.entrada_preco_medio_atual.place(relx=0.5, rely=0.88, relwidth=0.2)
+        #self.entrada_preco_medio_atual = Entry(self.aba1)
+        #self.entrada_preco_medio_atual.place(relx=0.5, rely=0.88, relwidth=0.2)
 
     def widgets_frame_2(self):
         # LISTAGEM COM A EXIBIÇÃO DOS DADOS
