@@ -8,25 +8,35 @@ class funcoes:
 
     def calculo_operacao(self):
         valor_taxa_b3 = self.calculo_taxa_b3()
-
         if self.entrada_tipo_operacao.get() == 'COMPRA':
             return round(float(self.entrada_qtd_acoes.get()) * float(self.entrada_valor_unitario.get()) + float(self.entrada_taxa_corretagem.get()) + valor_taxa_b3, 2)
         if self.entrada_tipo_operacao.get() == 'VENDA':
-            return round(float(self.entrada_qtd_acoes.get()) * float(self.entrada_valor_unitario.get()) - float(self.entrada_taxa_corretagem.get()) + valor_taxa_b3, 2)
+            return round(float(self.entrada_qtd_acoes.get()) * float(self.entrada_valor_unitario.get()) - float(self.entrada_taxa_corretagem.get()) - valor_taxa_b3, 2)
 
     def calculo_preco_medio(self):
         self.conectar_banco()
-        quant = int(list(self.cursor.execute(f"SELECT COUNT(codigo_operacao) AS quantidade FROM operacoes WHERE codigo_operacao = '{self.entrada_codigo_ativo.get()}' AND tipo_operacao = 'COMPRA';"))[0][0])
-        if quant == 0:
+        quantidade = int(list(self.cursor.execute(f"SELECT COUNT(codigo_operacao) AS quantidade FROM operacoes WHERE codigo_operacao = '{self.entrada_codigo_ativo.get()}' AND tipo_operacao = 'COMPRA';"))[0][0])
+        if quantidade == 0:
             self.desconectar_banco()
             if self.entrada_tipo_operacao.get() == "COMPRA":
                 return round(float(self.calculo_operacao())/float(self.entrada_qtd_acoes.get()), 2)
             return 0
-        preco_ant = list(self.cursor.execute(f"SELECT preco_medio FROM operacoes GROUP BY id_operacao HAVING codigo_operacao = '{self.entrada_codigo_ativo.get()}' AND tipo_operacao = 'COMPRA' ;"))[-1][0]
-        self.desconectar_banco()
+        tupla_quantidade_do_ativo_compra = list(self.cursor.execute(f"SELECT SUM(qtd_acoes) FROM operacoes GROUP BY id_operacao HAVING codigo_operacao = '{self.entrada_codigo_ativo.get()}' AND tipo_operacao = 'COMPRA' ;"))
+        tupla_preco_total_do_ativo_compra = list(self.cursor.execute(f"SELECT SUM(valor_operacao) FROM operacoes GROUP BY id_operacao HAVING codigo_operacao = '{self.entrada_codigo_ativo.get()}' AND tipo_operacao = 'COMPRA' ;"))
+        quantidade_do_ativo_compra = 0
+        preco_total_do_ativo_compra = 0
+        for i in range(len(tupla_quantidade_do_ativo_compra)):
+            quantidade_do_ativo_compra += float(tupla_quantidade_do_ativo_compra[i][0])
+        quantidade_do_ativo_compra += float(self.entrada_qtd_acoes.get())
+        for j in range(len(tupla_preco_total_do_ativo_compra)):
+            preco_total_do_ativo_compra += float(tupla_preco_total_do_ativo_compra[j][0])
+        preco_total_do_ativo_compra += float(self.calculo_operacao())
         if self.entrada_tipo_operacao.get() == "COMPRA":
-            return round((float(self.calculo_operacao())/float(self.entrada_qtd_acoes.get()) + float(preco_ant))/2.0, 2)
-        return float(preco_ant)
+            self.desconectar_banco()
+            return round(preco_total_do_ativo_compra/quantidade_do_ativo_compra, 2)
+        preco_ant = float(list(self.cursor.execute(f"SELECT preco_medio FROM operacoes GROUP BY id_operacao HAVING codigo_operacao = '{self.entrada_codigo_ativo.get()}' AND tipo_operacao = 'COMPRA' ;"))[-1][0])
+        self.desconectar_banco()
+        return preco_ant
 
     def limpar_tela(self):
         self.entrada_data.config(state='normal')
@@ -123,7 +133,7 @@ class funcoes:
     def apagar_operacao(self):
         self.variaveis()
         self.conectar_banco()
-        self.conector.execute('''DELETE FROM operacoes WHERE id_operacao = ?''', (self.id_oper))
+        self.conector.execute('''DELETE FROM operacoes WHERE id_operacao = ?''', (self.id_oper, ))
         self.conector.commit()
         self.desconectar_banco()
         self.limpar_tela()

@@ -97,8 +97,8 @@ class aplicativo(funcoes, validadores):
         self.label_codigo_ativo.place(relx=0.05, rely=0.05)
 
         self.entrada_codigo_ativo = StringVar(self.aba1)
-        self.ativos = ('VALE3', 'PETR4', 'ELET3', 'ITUB4', 'BBSA3', 'PETR3', 'B3SA3', 'BBDC4', 'CIEL3', 'NTCO3', 'TIMS3')
-        self.entrada_codigo_ativo.set('VALE3')
+        self.ativos = ('ITSA4', 'VALE3', 'PETR4', 'ELET3', 'ITUB4', 'BBSA3', 'PETR3', 'B3SA3', 'BBDC4', 'CIEL3', 'NTCO3', 'TIMS3')
+        self.entrada_codigo_ativo.set('ITSA4')
         self.popup_menu_ativos = OptionMenu(self.aba1, self.entrada_codigo_ativo, *self.ativos)
         self.popup_menu_ativos.place(relx=0.05, rely=0.15, relwidth=0.13, relheight=0.12)
 
@@ -125,7 +125,7 @@ class aplicativo(funcoes, validadores):
         self.botao_data = Button(self.aba1, text='Selecione', bd=2, bg='#107db2', fg='white', font=('verdana', 8, 'bold'), command=self.exibir_calendario)
         self.botao_data.place(relx=0.26, rely=0.64, relheight=0.10)
 
-        self.entrada_data = Entry(self.aba1, width=10, state='disable')
+        self.entrada_data = Entry(self.aba1, width=10, state= 'disabled')
         self.entrada_data.place(relx=0.05, rely=0.64, relwidth=0.2)
 
         # criação do label tipo de operação
@@ -164,7 +164,7 @@ class aplicativo(funcoes, validadores):
 
     def widgets_frame_2(self):
         # LISTAGEM COM A EXIBIÇÃO DOS DADOS
-        self.lista_operacoes = ttk.Treeview(self.frame_2, height=3, column=('coluna1', 'coluna2', 'coluna3', 'coluna4', 'coluna5', 'coluna6', 'coluna7', 'coluna8', 'coluna9', 'coluna10'))
+        self.lista_operacoes = ttk.Treeview(self.frame_2, height=3, columns=('coluna1', 'coluna2', 'coluna3', 'coluna4', 'coluna5', 'coluna6', 'coluna7', 'coluna8', 'coluna9', 'coluna10'))
         self.lista_operacoes.heading('#0', text='')
         self.lista_operacoes.heading('#1', text='Id')
         self.lista_operacoes.heading('#2', text='Cód.')
@@ -195,7 +195,7 @@ class aplicativo(funcoes, validadores):
 
         # criação da barra de rolagem
         self.barra_rolagem = Scrollbar(self.frame_2, orient='vertical')
-        self.lista_operacoes.configure(yscroll=self.barra_rolagem.set)
+        self.lista_operacoes.configure(yscrollcommand=self.barra_rolagem.set)
         self.barra_rolagem.place(
             relx=0.96, rely=0.1, relwidth=0.02, relheight=0.85)
 
