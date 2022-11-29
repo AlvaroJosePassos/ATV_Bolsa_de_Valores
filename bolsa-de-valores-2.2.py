@@ -41,7 +41,7 @@ class aplicativo(funcoes, validadores):
         self.frame_2.place(relx=0.02, rely=0.5, relwidth=0.96, relheight=0.46)
 
     def widgets_frame_1(self):
-        # ABAS =================================================================================
+        # ABAS ===================================================================================
         self.abas = ttk.Notebook(self.frame_1)
         self.aba1 = Frame(self.abas)
         self.aba2 = Frame(self.abas)
@@ -49,8 +49,8 @@ class aplicativo(funcoes, validadores):
         self.aba1.configure(background='#dfe3ee')
         self.aba2.configure(background='#dfe3ee')
 
-        self.abas.add(self.aba1, text='Aba 1')
-        self.abas.add(self.aba2, text='Aba 2')
+        self.abas.add(self.aba1, text='Geral')
+        self.abas.add(self.aba2, text='Retorno')
 
         self.abas.place(relx=0, rely=0, relwidth=1.001, relheight=1.01)
 
@@ -147,21 +147,29 @@ class aplicativo(funcoes, validadores):
         self.entrada_taxa_corretagem = Entry(self.aba1, validate='key', validatecommand=self.validacao)
         self.entrada_taxa_corretagem.place(relx=0.05, rely=0.88, relwidth=0.2)
 
-        # criação do label taxa B3
-        '''self.label_taxa_b3 = Label(
-            self.aba1, text='Taxa B3', bg='#dfe3ee', fg='#1e3743')
-        self.label_taxa_b3.place(relx=0.5, rely=0.78)
-        self.entrada_taxa_b3 = Entry(self.aba1)
-        self.entrada_taxa_b3.place(relx=0.5, rely=0.88, relwidth=0.2)'''
-
         # criação do label preço médio atual
         self.label_preco_medio_atual = Label(
             self.aba1, text= f'Ultimo Preço Médio Adicionado: ', bg='#dfe3ee', fg='#1e3743')
         self.label_preco_medio_atual.place(relx=0.5, rely=0.85)
 
-        #self.entrada_preco_medio_atual = Entry(self.aba1)
-        #self.entrada_preco_medio_atual.place(relx=0.5, rely=0.88, relwidth=0.2)
+        # ABA 2 ==================================================================================
+        
 
+        # criação do butão calcular lucro
+        self.btn_lucro = Button(self.aba2, text='Lucro', bd=2, bg='#107db2', fg='white', font=(
+            'verdana', 8, 'bold'), command=self.lucro_prejuizo)
+        self.btn_lucro.place(relx=0.41, rely=0.16, relwidth=0.1, relheight=0.15)
+
+        # criação do label tipo da operação
+        self.entrada_codigo_ativo_lucro = StringVar(self.aba2)
+        self.entrada_codigo_ativo_lucro.set('ITSA4')
+        self.popup_menu_ativos_lucro = OptionMenu(self.aba2, self.entrada_codigo_ativo, *self.ativos)
+        self.popup_menu_ativos_lucro.place(relx=0.40, rely=0.05, relwidth=0.13, relheight=0.12)
+
+        # criação do label lucro da operação
+        self.lucro = Label(self.aba2, text='', bg='#dfe3ee', fg='#1e3743')
+        self.lucro.place(relx=0.42, rely=0.32)
+        
     def widgets_frame_2(self):
         # LISTAGEM COM A EXIBIÇÃO DOS DADOS
         self.lista_operacoes = ttk.Treeview(self.frame_2, height=3, columns=('coluna1', 'coluna2', 'coluna3', 'coluna4', 'coluna5', 'coluna6', 'coluna7', 'coluna8', 'coluna9', 'coluna10'))

@@ -38,6 +38,22 @@ class funcoes:
         self.desconectar_banco()
         return preco_ant
 
+    def lucro_prejuizo(self):
+        self.conectar_banco()
+        tupla_valor_total_de_compra =  list(self.cursor.execute(f"SELECT SUM(valor_operacao) FROM operacoes GROUP BY id_operacao HAVING codigo_operacao = '{self.entrada_codigo_ativo.get()}' AND tipo_operacao = 'COMPRA' ;"))
+        tupla_valor_total_de_venda =  list(self.cursor.execute(f"SELECT SUM(valor_operacao) FROM operacoes GROUP BY id_operacao HAVING codigo_operacao = '{self.entrada_codigo_ativo.get()}' AND tipo_operacao = 'VENDA' ;")) 
+        valor_total_de_venda = 0
+        valor_total_de_compra = 0
+        self.desconectar_banco()
+        for i in range(len(tupla_valor_total_de_compra)):
+            valor_total_de_compra += float(tupla_valor_total_de_compra[i][0])
+        for i in range(len(tupla_valor_total_de_venda)):
+            valor_total_de_venda += float(tupla_valor_total_de_venda[i][0])
+        print(f'{valor_total_de_compra}')
+        print(f'{valor_total_de_venda}')
+        lucro_prejuizo = round((valor_total_de_venda - valor_total_de_compra), 2)
+        self.lucro.config(text = f'{lucro_prejuizo}')
+
     def limpar_tela(self):
         self.entrada_data.config(state='normal')
         self.entrada_id_operacao.delete(0, END)
