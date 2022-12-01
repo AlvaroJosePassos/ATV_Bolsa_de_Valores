@@ -18,6 +18,15 @@ class aplicativo(funcoes, validadores):
         janela.mainloop()
 
     def tela(self):
+          """
+        -- > Função que permite exibir uma tela com:
+        : self.janela.title: define a logo na barra de título
+        : self.janela.configure: define a cor de fundo da janela
+        : self.janela.geometry: define o tamanho inicial da janela
+        : self.janela.resizable:  responasavidade da tela em True, True que define na altura e largura
+        : self.janela.maxsize: cria um limite máximo de tamanho que a janela pode ter
+        : self.janela.minsize: cria um limite mínimo de tamanho que a janela pode ter
+        """
         # título da janela: aparece logo na barra de título
         self.janela.title('Cadastro de Operações')
         self.janela.configure(background='#1e3743')  # cor de fundo da janela
@@ -31,6 +40,9 @@ class aplicativo(funcoes, validadores):
         self.janela.minsize(width=700, height=500)
 
     def frames_de_tela(self):
+        """
+        --> Função que permite a criação de frames dentro da janela.
+        """
         # criação dos frames dentro da janela
         self.frame_1 = Frame(self.janela, bd=4, bg='#dfe3ee',
                              highlightbackground='#759fe6', highlightthickness=3)
@@ -41,6 +53,32 @@ class aplicativo(funcoes, validadores):
         self.frame_2.place(relx=0.02, rely=0.5, relwidth=0.96, relheight=0.46)
 
     def widgets_frame_1(self):
+        """
+        ABAS ===================================================================================
+        --> Comando para abas
+        #### BOTÕES #####
+        : self.btn_limpar: criação do botão limpar
+        : self.btn_buscar: criação do botão buscar
+        : self.btn_guardar: criação do botão novo
+        : self.btn_alterar: criação do botão alterar
+        : self.btn_apagar: criação do botão apagar
+        
+        LABELS =================================================================================
+
+        : self.label.id_operacao: criação do label ID operação
+        : self.label_codigo_ativo: criação da label código ativo
+        : self.label_qtd_acoes: criação do label para passar a quantidade de ações
+        : self.label_valor_unitario: criação da label para passar o valor unitário
+        : self.label_data: criação do label data com calendário
+        : self.label_tipo_operacao: criação do label para passar o tipo de operação
+        : self.label_taxa_corretagem: criação do label para passar a taxa de corretagem
+        : self.label_preco_medio_atual: criação do label para passar o preço médio atual
+        
+        ABA 2 ==================================================================================
+        : self.btn_lucro: criação do botão calcular lucro
+        : self.entrada_codigo_ativo_lucro: criação do label para passar o tipo de operação
+        : self.lucro: criação do label para passar o lucro da operação
+        """
         # ABAS ===================================================================================
         self.abas = ttk.Notebook(self.frame_1)
         self.aba1 = Frame(self.abas)
@@ -171,6 +209,11 @@ class aplicativo(funcoes, validadores):
         self.lucro.place(relx=0.42, rely=0.32)
         
     def widgets_frame_2(self):
+        """
+        --> Função que faz uma listagem com a exibição dos dados
+        : self.lista_operacoes: passa a soma dos widths da lista com exceção do item 0, tem que dar 500
+        : self.barra_rolagem: faz a criação da barra de rolagem
+        """
         # LISTAGEM COM A EXIBIÇÃO DOS DADOS
         self.lista_operacoes = ttk.Treeview(self.frame_2, height=3, columns=('coluna1', 'coluna2', 'coluna3', 'coluna4', 'coluna5', 'coluna6', 'coluna7', 'coluna8', 'coluna9', 'coluna10'))
         self.lista_operacoes.heading('#0', text='')
@@ -210,6 +253,11 @@ class aplicativo(funcoes, validadores):
         self.lista_operacoes.bind('<Double-1>', self.duplo_clique)
 
     def menus(self):
+        """
+        --> Função para passar o Menu da janela
+        : self.janela.config: passar as configurações do janela
+        Nessa função podemos ter opções do menu para passar os relatórios, assim como se tiver erro podemos limpar a tela, e depois de concluir, tem a opção sair do programa.
+        """
         barra_menu = Menu(self.janela)
         self.janela.config(menu=barra_menu)
         menu_item1 = Menu(barra_menu)
@@ -228,6 +276,9 @@ class aplicativo(funcoes, validadores):
         # menu_item2.add_command(label='Ficha da Operação', command=self.relatorio_operacao)
 
     def janela_calendario(self):
+        """
+        --> Função que permite passar o calendário da janela por meio de configurações.
+        """
         self.janela_cal = Toplevel()
         self.janela_cal.title('Inserir data')
         self.janela_cal.configure(background='gray75')
@@ -238,6 +289,9 @@ class aplicativo(funcoes, validadores):
         self.janela_cal.grab_set()
 
     def validar_entrada(self):
+        """
+        --> Função para validação da entrada de registro da janela.
+        """
         self.validacao = (self.janela.register(self.validar_campo), '%P')
 
 aplicativo()
