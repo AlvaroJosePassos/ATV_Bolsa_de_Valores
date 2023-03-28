@@ -247,8 +247,7 @@ class aplicativo(funcoes, validadores):
         # criação da barra de rolagem
         self.barra_rolagem = Scrollbar(self.frame_2, orient='vertical')
         self.lista_operacoes.configure(yscrollcommand=self.barra_rolagem.set)
-        self.barra_rolagem.place(
-            relx=0.96, rely=0.1, relwidth=0.02, relheight=0.85)
+        self.barra_rolagem.place(relx=0.96, rely=0.1, relwidth=0.02, relheight=0.85)
 
         self.lista_operacoes.bind('<Double-1>', self.duplo_clique)
 

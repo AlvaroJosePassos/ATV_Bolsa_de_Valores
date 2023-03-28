@@ -65,8 +65,6 @@ class funcoes:
             valor_total_de_compra += float(tupla_valor_total_de_compra[i][0])
         for i in range(len(tupla_valor_total_de_venda)):
             valor_total_de_venda += float(tupla_valor_total_de_venda[i][0])
-        print(f'{valor_total_de_compra}')
-        print(f'{valor_total_de_venda}')
         lucro_prejuizo = round((valor_total_de_venda - valor_total_de_compra), 2)
         self.lucro.config(text = f'{lucro_prejuizo}')
 
