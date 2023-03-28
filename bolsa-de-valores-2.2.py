@@ -4,6 +4,8 @@ from funcionalidades import funcoes
 # from placeholders import entrada_placeholder
 
 janela = Tk()
+
+
 class aplicativo(funcoes, validadores):
     def __init__(self):
         self.janela = janela
@@ -18,15 +20,6 @@ class aplicativo(funcoes, validadores):
         janela.mainloop()
 
     def tela(self):
-          """
-        -- > Função que permite exibir uma tela com:
-        : self.janela.title: define a logo na barra de título
-        : self.janela.configure: define a cor de fundo da janela
-        : self.janela.geometry: define o tamanho inicial da janela
-        : self.janela.resizable:  responasavidade da tela em True, True que define na altura e largura
-        : self.janela.maxsize: cria um limite máximo de tamanho que a janela pode ter
-        : self.janela.minsize: cria um limite mínimo de tamanho que a janela pode ter
-        """
         # título da janela: aparece logo na barra de título
         self.janela.title('Cadastro de Operações')
         self.janela.configure(background='#1e3743')  # cor de fundo da janela
@@ -40,9 +33,6 @@ class aplicativo(funcoes, validadores):
         self.janela.minsize(width=700, height=500)
 
     def frames_de_tela(self):
-        """
-        --> Função que permite a criação de frames dentro da janela.
-        """
         # criação dos frames dentro da janela
         self.frame_1 = Frame(self.janela, bd=4, bg='#dfe3ee',
                              highlightbackground='#759fe6', highlightthickness=3)
@@ -53,33 +43,7 @@ class aplicativo(funcoes, validadores):
         self.frame_2.place(relx=0.02, rely=0.5, relwidth=0.96, relheight=0.46)
 
     def widgets_frame_1(self):
-        """
-        ABAS ===================================================================================
-        --> Comando para abas
-        #### BOTÕES #####
-        : self.btn_limpar: criação do botão limpar
-        : self.btn_buscar: criação do botão buscar
-        : self.btn_guardar: criação do botão novo
-        : self.btn_alterar: criação do botão alterar
-        : self.btn_apagar: criação do botão apagar
-        
-        LABELS =================================================================================
-
-        : self.label.id_operacao: criação do label ID operação
-        : self.label_codigo_ativo: criação da label código ativo
-        : self.label_qtd_acoes: criação do label para passar a quantidade de ações
-        : self.label_valor_unitario: criação da label para passar o valor unitário
-        : self.label_data: criação do label data com calendário
-        : self.label_tipo_operacao: criação do label para passar o tipo de operação
-        : self.label_taxa_corretagem: criação do label para passar a taxa de corretagem
-        : self.label_preco_medio_atual: criação do label para passar o preço médio atual
-        
-        ABA 2 ==================================================================================
-        : self.btn_lucro: criação do botão calcular lucro
-        : self.entrada_codigo_ativo_lucro: criação do label para passar o tipo de operação
-        : self.lucro: criação do label para passar o lucro da operação
-        """
-        # ABAS ===================================================================================
+        # ABAS =================================================================================
         self.abas = ttk.Notebook(self.frame_1)
         self.aba1 = Frame(self.abas)
         self.aba2 = Frame(self.abas)
@@ -87,8 +51,8 @@ class aplicativo(funcoes, validadores):
         self.aba1.configure(background='#dfe3ee')
         self.aba2.configure(background='#dfe3ee')
 
-        self.abas.add(self.aba1, text='Geral')
-        self.abas.add(self.aba2, text='Retorno')
+        self.abas.add(self.aba1, text='Aba 1')
+        self.abas.add(self.aba2, text='Aba 2')
 
         self.abas.place(relx=0, rely=0, relwidth=1.001, relheight=1.01)
 
@@ -131,21 +95,26 @@ class aplicativo(funcoes, validadores):
         self.entrada_id_operacao.place(relx=0.19, rely=0.15, relwidth=0.10)
 
         # criação do label código ativo
-        self.label_codigo_ativo = Label(self.aba1, text='Cód. Ativo', bg='#dfe3ee', fg='#1e3743')
+        self.label_codigo_ativo = Label(
+            self.aba1, text='Cód. Ativo', bg='#dfe3ee', fg='#1e3743')
         self.label_codigo_ativo.place(relx=0.05, rely=0.05)
 
         self.entrada_codigo_ativo = StringVar(self.aba1)
-        self.ativos = ('ITSA4', 'VALE3', 'PETR4', 'ELET3', 'ITUB4', 'BBSA3', 'PETR3', 'B3SA3', 'BBDC4', 'CIEL3', 'NTCO3', 'TIMS3')
+        self.ativos = ('ITSA4', 'VALE3', 'PETR4', 'ELET3', 'ITUB4',
+                       'BBSA3', 'PETR3', 'B3SA3', 'BBDC4', 'CIEL3', 'NTCO3', 'TIMS3')
         self.entrada_codigo_ativo.set('ITSA4')
-        self.popup_menu_ativos = OptionMenu(self.aba1, self.entrada_codigo_ativo, *self.ativos)
-        self.popup_menu_ativos.place(relx=0.05, rely=0.15, relwidth=0.13, relheight=0.12)
+        self.popup_menu_ativos = OptionMenu(
+            self.aba1, self.entrada_codigo_ativo, *self.ativos)
+        self.popup_menu_ativos.place(
+            relx=0.05, rely=0.15, relwidth=0.13, relheight=0.12)
 
         # criação do label quantidade de ações
         self.label_qtd_acoes = Label(
             self.aba1, text='Quantidade de Ações', bg='#dfe3ee', fg='#1e3743')
         self.label_qtd_acoes.place(relx=0.05, rely=0.31)
 
-        self.entrada_qtd_acoes = Entry(self.aba1, validate='key', validatecommand=self.validacao)
+        self.entrada_qtd_acoes = Entry(
+            self.aba1, validate='key', validatecommand=self.validacao)
         self.entrada_qtd_acoes.place(relx=0.05, rely=0.41, relwidth=0.4)
 
         # criação do label valor unitário
@@ -153,17 +122,20 @@ class aplicativo(funcoes, validadores):
             self.aba1, text='Valor Unitário', bg='#dfe3ee', fg='#1e3743')
         self.label_valor_unitario.place(relx=0.5, rely=0.31)
 
-        self.entrada_valor_unitario = Entry(self.aba1, validate='key', validatecommand=self.validacao)
+        self.entrada_valor_unitario = Entry(
+            self.aba1, validate='key', validatecommand=self.validacao)
         self.entrada_valor_unitario.place(relx=0.5, rely=0.41, relwidth=0.4)
 
         # criação do label data com calendário
-        self.label_data = Label(self.aba1, text='Data', bg='#dfe3ee', fg='#1e3743')
+        self.label_data = Label(self.aba1, text='Data',
+                                bg='#dfe3ee', fg='#1e3743')
         self.label_data.place(relx=0.05, rely=0.54)
 
-        self.botao_data = Button(self.aba1, text='Selecione', bd=2, bg='#107db2', fg='white', font=('verdana', 8, 'bold'), command=self.exibir_calendario)
+        self.botao_data = Button(self.aba1, text='Selecione', bd=2, bg='#107db2', fg='white', font=(
+            'verdana', 8, 'bold'), command=self.exibir_calendario)
         self.botao_data.place(relx=0.26, rely=0.64, relheight=0.10)
 
-        self.entrada_data = Entry(self.aba1, width=10, state= 'disabled')
+        self.entrada_data = Entry(self.aba1, width=10, state='disabled')
         self.entrada_data.place(relx=0.05, rely=0.64, relwidth=0.2)
 
         # criação do label tipo de operação
@@ -174,48 +146,39 @@ class aplicativo(funcoes, validadores):
         self.entrada_tipo_operacao = StringVar(self.aba1)
         self.opcoes = ('COMPRA', 'VENDA')
         self.entrada_tipo_operacao.set('COMPRA')
-        self.popup_menu_tipo_op = OptionMenu(self.aba1, self.entrada_tipo_operacao, *self.opcoes)
-        self.popup_menu_tipo_op.place(relx=0.5, rely=0.64, relwidth=0.4, relheight=0.13)
+        self.popup_menu_tipo_op = OptionMenu(
+            self.aba1, self.entrada_tipo_operacao, *self.opcoes)
+        self.popup_menu_tipo_op.place(
+            relx=0.5, rely=0.64, relwidth=0.4, relheight=0.13)
 
         # criação do label taxa corretagem
         self.label_taxa_corretagem = Label(
             self.aba1, text='Taxa Corretagem', bg='#dfe3ee', fg='#1e3743')
         self.label_taxa_corretagem.place(relx=0.05, rely=0.78)
 
-        self.entrada_taxa_corretagem = Entry(self.aba1, validate='key', validatecommand=self.validacao)
+        self.entrada_taxa_corretagem = Entry(
+            self.aba1, validate='key', validatecommand=self.validacao)
         self.entrada_taxa_corretagem.place(relx=0.05, rely=0.88, relwidth=0.2)
+
+        # criação do label taxa B3
+        '''self.label_taxa_b3 = Label(
+            self.aba1, text='Taxa B3', bg='#dfe3ee', fg='#1e3743')
+        self.label_taxa_b3.place(relx=0.5, rely=0.78)
+        self.entrada_taxa_b3 = Entry(self.aba1)
+        self.entrada_taxa_b3.place(relx=0.5, rely=0.88, relwidth=0.2)'''
 
         # criação do label preço médio atual
         self.label_preco_medio_atual = Label(
-            self.aba1, text= f'Ultimo Preço Médio Adicionado: ', bg='#dfe3ee', fg='#1e3743')
+            self.aba1, text=f'Ultimo Preço Médio Adicionado: ', bg='#dfe3ee', fg='#1e3743')
         self.label_preco_medio_atual.place(relx=0.5, rely=0.85)
 
-        # ABA 2 ==================================================================================
-        
+        # self.entrada_preco_medio_atual = Entry(self.aba1)
+        # self.entrada_preco_medio_atual.place(relx=0.5, rely=0.88, relwidth=0.2)
 
-        # criação do butão calcular lucro
-        self.btn_lucro = Button(self.aba2, text='Lucro', bd=2, bg='#107db2', fg='white', font=(
-            'verdana', 8, 'bold'), command=self.lucro_prejuizo)
-        self.btn_lucro.place(relx=0.41, rely=0.16, relwidth=0.1, relheight=0.15)
-
-        # criação do label tipo da operação
-        self.entrada_codigo_ativo_lucro = StringVar(self.aba2)
-        self.entrada_codigo_ativo_lucro.set('ITSA4')
-        self.popup_menu_ativos_lucro = OptionMenu(self.aba2, self.entrada_codigo_ativo, *self.ativos)
-        self.popup_menu_ativos_lucro.place(relx=0.40, rely=0.05, relwidth=0.13, relheight=0.12)
-
-        # criação do label lucro da operação
-        self.lucro = Label(self.aba2, text='', bg='#dfe3ee', fg='#1e3743')
-        self.lucro.place(relx=0.42, rely=0.32)
-        
     def widgets_frame_2(self):
-        """
-        --> Função que faz uma listagem com a exibição dos dados
-        : self.lista_operacoes: passa a soma dos widths da lista com exceção do item 0, tem que dar 500
-        : self.barra_rolagem: faz a criação da barra de rolagem
-        """
         # LISTAGEM COM A EXIBIÇÃO DOS DADOS
-        self.lista_operacoes = ttk.Treeview(self.frame_2, height=3, columns=('coluna1', 'coluna2', 'coluna3', 'coluna4', 'coluna5', 'coluna6', 'coluna7', 'coluna8', 'coluna9', 'coluna10'))
+        self.lista_operacoes = ttk.Treeview(self.frame_2, height=3, columns=(
+            'coluna1', 'coluna2', 'coluna3', 'coluna4', 'coluna5', 'coluna6', 'coluna7', 'coluna8', 'coluna9', 'coluna10'))
         self.lista_operacoes.heading('#0', text='')
         self.lista_operacoes.heading('#1', text='Id')
         self.lista_operacoes.heading('#2', text='Cód.')
@@ -247,16 +210,12 @@ class aplicativo(funcoes, validadores):
         # criação da barra de rolagem
         self.barra_rolagem = Scrollbar(self.frame_2, orient='vertical')
         self.lista_operacoes.configure(yscrollcommand=self.barra_rolagem.set)
-        self.barra_rolagem.place(relx=0.96, rely=0.1, relwidth=0.02, relheight=0.85)
+        self.barra_rolagem.place(
+            relx=0.96, rely=0.1, relwidth=0.02, relheight=0.85)
 
         self.lista_operacoes.bind('<Double-1>', self.duplo_clique)
 
     def menus(self):
-        """
-        --> Função para passar o Menu da janela
-        : self.janela.config: passar as configurações do janela
-        Nessa função podemos ter opções do menu para passar os relatórios, assim como se tiver erro podemos limpar a tela, e depois de concluir, tem a opção sair do programa.
-        """
         barra_menu = Menu(self.janela)
         self.janela.config(menu=barra_menu)
         menu_item1 = Menu(barra_menu)
@@ -275,9 +234,6 @@ class aplicativo(funcoes, validadores):
         # menu_item2.add_command(label='Ficha da Operação', command=self.relatorio_operacao)
 
     def janela_calendario(self):
-        """
-        --> Função que permite passar o calendário da janela por meio de configurações.
-        """
         self.janela_cal = Toplevel()
         self.janela_cal.title('Inserir data')
         self.janela_cal.configure(background='gray75')
@@ -288,9 +244,7 @@ class aplicativo(funcoes, validadores):
         self.janela_cal.grab_set()
 
     def validar_entrada(self):
-        """
-        --> Função para validação da entrada de registro da janela.
-        """
         self.validacao = (self.janela.register(self.validar_campo), '%P')
+
 
 aplicativo()

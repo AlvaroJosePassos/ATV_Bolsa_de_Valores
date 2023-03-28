@@ -1,76 +1,56 @@
 from modulos import *
 
+
 class funcoes:
     def calculo_taxa_b3(self):
-        """ --> Função que permite dar entrada a quantidade de ações e valor unitário para retornar a taxa da B3.
-        Returns:
-            retorna o arredondamento do valor com duas casas decimais.
-        """
         quant_acoes = float(self.entrada_qtd_acoes.get())
         valor_unit = float(self.entrada_valor_unitario.get())
         return round(0.0003 * quant_acoes * valor_unit, 2)
 
     def calculo_operacao(self):
-        """--> Função para calcular o total da operação com a condição de 'COMPRA' ou 'VENDA'.
-        Returns:
-            retorna o arredondamento do valor com duas casas decimais.
-        """
         valor_taxa_b3 = self.calculo_taxa_b3()
+
         if self.entrada_tipo_operacao.get() == 'COMPRA':
             return round(float(self.entrada_qtd_acoes.get()) * float(self.entrada_valor_unitario.get()) + float(self.entrada_taxa_corretagem.get()) + valor_taxa_b3, 2)
         if self.entrada_tipo_operacao.get() == 'VENDA':
-            return round(float(self.entrada_qtd_acoes.get()) * float(self.entrada_valor_unitario.get()) - float(self.entrada_taxa_corretagem.get()) - valor_taxa_b3, 2)
+            return round(float(self.entrada_qtd_acoes.get()) * float(self.entrada_valor_unitario.get()) - float(self.entrada_taxa_corretagem.get()) + valor_taxa_b3, 2)
 
     def calculo_preco_medio(self):
-        """Função para calculo do preço médio.
-        --> Permite conectar ao banco
-        --> Inserir a quantidade de operações, se a quantidade for 0, desconecta o banco.
-        Returns:
-            retorna o preço médio das operações
-        """
         self.conectar_banco()
-        quantidade = int(list(self.cursor.execute(f"SELECT COUNT(codigo_operacao) AS quantidade FROM operacoes WHERE codigo_operacao = '{self.entrada_codigo_ativo.get()}' AND tipo_operacao = 'COMPRA';"))[0][0])
+        quantidade = int(list(self.cursor.execute(
+            f"SELECT COUNT(codigo_operacao) AS quantidade FROM operacoes WHERE codigo_operacao = '{self.entrada_codigo_ativo.get()}' AND tipo_operacao = 'COMPRA';"))[0][0])
         if quantidade == 0:
             self.desconectar_banco()
             if self.entrada_tipo_operacao.get() == "COMPRA":
                 return round(float(self.calculo_operacao())/float(self.entrada_qtd_acoes.get()), 2)
             return 0
-        tupla_quantidade_do_ativo_compra = list(self.cursor.execute(f"SELECT SUM(qtd_acoes) FROM operacoes GROUP BY id_operacao HAVING codigo_operacao = '{self.entrada_codigo_ativo.get()}' AND tipo_operacao = 'COMPRA' ;"))
-        tupla_preco_total_do_ativo_compra = list(self.cursor.execute(f"SELECT SUM(valor_operacao) FROM operacoes GROUP BY id_operacao HAVING codigo_operacao = '{self.entrada_codigo_ativo.get()}' AND tipo_operacao = 'COMPRA' ;"))
+        tupla_quantidade_do_ativo_compra = list(self.cursor.execute(
+            f"SELECT SUM(qtd_acoes) FROM operacoes GROUP BY id_operacao HAVING codigo_operacao = '{self.entrada_codigo_ativo.get()}' AND tipo_operacao = 'COMPRA' ;"))
+        tupla_preco_total_do_ativo_compra = list(self.cursor.execute(
+            f"SELECT SUM(valor_operacao) FROM operacoes GROUP BY id_operacao HAVING codigo_operacao = '{self.entrada_codigo_ativo.get()}' AND tipo_operacao = 'COMPRA' ;"))
+        print(tupla_preco_total_do_ativo_compra)
+        print(tupla_quantidade_do_ativo_compra)
         quantidade_do_ativo_compra = 0
         preco_total_do_ativo_compra = 0
         for i in range(len(tupla_quantidade_do_ativo_compra)):
-            quantidade_do_ativo_compra += float(tupla_quantidade_do_ativo_compra[i][0])
+            quantidade_do_ativo_compra += float(
+                tupla_quantidade_do_ativo_compra[i][0])
         quantidade_do_ativo_compra += float(self.entrada_qtd_acoes.get())
         for j in range(len(tupla_preco_total_do_ativo_compra)):
-            preco_total_do_ativo_compra += float(tupla_preco_total_do_ativo_compra[j][0])
+            preco_total_do_ativo_compra += float(
+                tupla_preco_total_do_ativo_compra[j][0])
         preco_total_do_ativo_compra += float(self.calculo_operacao())
+        print(preco_total_do_ativo_compra)
+        print(quantidade_do_ativo_compra)
         if self.entrada_tipo_operacao.get() == "COMPRA":
             self.desconectar_banco()
             return round(preco_total_do_ativo_compra/quantidade_do_ativo_compra, 2)
-        preco_ant = float(list(self.cursor.execute(f"SELECT preco_medio FROM operacoes GROUP BY id_operacao HAVING codigo_operacao = '{self.entrada_codigo_ativo.get()}' AND tipo_operacao = 'COMPRA' ;"))[-1][0])
+        preco_ant = float(list(self.cursor.execute(
+            f"SELECT preco_medio FROM operacoes GROUP BY id_operacao HAVING codigo_operacao = '{self.entrada_codigo_ativo.get()}' AND tipo_operacao = 'COMPRA' ;"))[-1][0])
         self.desconectar_banco()
         return preco_ant
 
-    def lucro_prejuizo(self):
-        """--> Função que define o lucro ou o prejuízo das operações.
-        """
-        self.conectar_banco()
-        tupla_valor_total_de_compra =  list(self.cursor.execute(f"SELECT SUM(valor_operacao) FROM operacoes GROUP BY id_operacao HAVING codigo_operacao = '{self.entrada_codigo_ativo.get()}' AND tipo_operacao = 'COMPRA' ;"))
-        tupla_valor_total_de_venda =  list(self.cursor.execute(f"SELECT SUM(valor_operacao) FROM operacoes GROUP BY id_operacao HAVING codigo_operacao = '{self.entrada_codigo_ativo.get()}' AND tipo_operacao = 'VENDA' ;")) 
-        valor_total_de_venda = 0
-        valor_total_de_compra = 0
-        self.desconectar_banco()
-        for i in range(len(tupla_valor_total_de_compra)):
-            valor_total_de_compra += float(tupla_valor_total_de_compra[i][0])
-        for i in range(len(tupla_valor_total_de_venda)):
-            valor_total_de_venda += float(tupla_valor_total_de_venda[i][0])
-        lucro_prejuizo = round((valor_total_de_venda - valor_total_de_compra), 2)
-        self.lucro.config(text = f'{lucro_prejuizo}')
-
     def limpar_tela(self):
-        """--> Função usada para limpar todos os campos de inserção da tela
-        """
         self.entrada_data.config(state='normal')
         self.entrada_id_operacao.delete(0, END)
         self.entrada_data.delete(0, END)
@@ -80,21 +60,15 @@ class funcoes:
         self.entrada_data.config(state='disable')
 
     def conectar_banco(self):
-        """--> Função que define conectar o banco com o arquivo bolsa de valores.
-        """
         self.conector = sqlite3.connect('bolsa_de_valores.bd')
         self.cursor = self.conector.cursor()
         print('Conectando-se ao banco de dados...')
 
     def desconectar_banco(self):
-        """--> Função define desconectar o banco.
-        """
         self.conector.close()
         print('Banco de dados desconectado...')
 
     def criar_tabela(self):
-        """--> Função que permite criar a tabela de operações dentro do banco.
-        """
         self.conectar_banco()
 
         # criação da tabela operações
@@ -115,8 +89,6 @@ class funcoes:
         self.desconectar_banco()
 
     def variaveis(self):
-        """--> Função de entrada das variaveis da operação.
-        """
         self.id_oper = self.entrada_id_operacao.get()
         self.cod_ativo = self.entrada_codigo_ativo.get()
         self.data = self.entrada_data.get()
@@ -129,8 +101,6 @@ class funcoes:
         self.preco_medio = self.calculo_preco_medio()
 
     def adicionar_operacao(self):
-        """--> Função que permite a entrada de operações, se o usuário preencher todos os campos obrigatoriamente, caso contrário o programa vai gerar um mensagem de erro.
-        """
         if self.entrada_qtd_acoes.get() == "" or self.entrada_valor_unitario.get() == "" or self.entrada_data.get() == "" or self.entrada_taxa_corretagem.get() == "":
             mensagem = 'Para cadastrar uma operação, preencha todos os campos obrigatórios!'
             messagebox.showinfo('Informação de Erro', mensagem)
@@ -141,14 +111,13 @@ class funcoes:
                     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
                 ''', (self.cod_ativo, self.data, self.qtd, self.valor_unt, self.tipo_op, self.taxa_corr, self.tx_b3, self.valor_op, self.preco_medio))
             self.conector.commit()
-            self.label_preco_medio_atual.config(text = f'Ultimo Preço Medio Adicionado: {self.preco_medio}')
+            self.label_preco_medio_atual.config(
+                text=f'Ultimo Preço Medio Adicionado: {self.preco_medio}')
             self.desconectar_banco()
             self.select_lista()
             self.limpar_tela()
 
     def select_lista(self):
-        """--> Função seleciona os elementos diretamente do banco.
-        """
         self.lista_operacoes.delete(*self.lista_operacoes.get_children())
         self.conectar_banco()
         lista = self.cursor.execute('''SELECT id_operacao, codigo_operacao, data, qtd_acoes, valor_unitario, tipo_operacao, taxa_corretagem, taxa_b3, valor_operacao, preco_medio FROM operacoes
@@ -159,14 +128,13 @@ class funcoes:
         self.desconectar_banco()
 
     def duplo_clique(self, event):
-        """--> Função para validar os elementos de entrada da lista.
-        """
         self.limpar_tela()
         self.lista_operacoes.selection()
 
         for termo in self.lista_operacoes.selection():
             self.entrada_data.config(state='normal')
-            col1, col2, col3, col4, col5, col6, col7, col8, col9, col10 = self.lista_operacoes.item(termo, 'values')
+            col1, col2, col3, col4, col5, col6, col7, col8, col9, col10 = self.lista_operacoes.item(
+                termo, 'values')
             self.entrada_id_operacao.insert(END, col1)
             self.entrada_codigo_ativo.set(col2)
             self.entrada_data.insert(END, col3)
@@ -177,32 +145,35 @@ class funcoes:
             self.entrada_data.config(state='disable')
 
     def apagar_operacao(self):
-        """--> Função que permite conectar ao banco e deletar operação, caso o usuário permitir.
-        """
-        self.variaveis()
-        self.conectar_banco()
-        self.conector.execute('''DELETE FROM operacoes WHERE id_operacao = ?''', (self.id_oper, ))
-        self.conector.commit()
-        self.desconectar_banco()
-        self.limpar_tela()
-        self.select_lista()
+        if self.entrada_qtd_acoes.get() == "" or self.entrada_valor_unitario.get() == "" or self.entrada_data.get() == "" or self.entrada_taxa_corretagem.get() == "":
+            mensagem = 'Para apagar uma operação, selecione uma operação!'
+            messagebox.showinfo('Informação de Erro', mensagem)
+        else:
+            self.variaveis()
+            self.conectar_banco()
+            self.conector.execute(
+                '''DELETE FROM operacoes WHERE id_operacao = ?''', (self.id_oper, ))
+            self.conector.commit()
+            self.desconectar_banco()
+            self.limpar_tela()
+            self.select_lista()
 
     def alterar_operacao(self):
-        """--> Função que permite alterar as operações por meio de uma conexão no banco.
-        """
-        self.variaveis()
-        self.conectar_banco()
-        self.cursor.execute('''UPDATE operacoes SET codigo_operacao = ?, data = ?, qtd_acoes = ?, valor_unitario = ?, tipo_operacao = ?, taxa_corretagem = ?, taxa_b3 = ?, valor_operacao = ?, preco_medio = ?
-            WHERE id_operacao = ?
-        ''', (self.cod_ativo, self.data, self.qtd, self.valor_unt, self.tipo_op, self.taxa_corr, self.tx_b3, self.valor_op, self.preco_medio, self.id_oper))
-        self.conector.commit()
-        self.desconectar_banco()
-        self.select_lista()
-        self.limpar_tela()
+        if self.entrada_qtd_acoes.get() == "" or self.entrada_valor_unitario.get() == "" or self.entrada_data.get() == "" or self.entrada_taxa_corretagem.get() == "":
+            mensagem = 'Para alterar uma operação, selecione uma operação!'
+            messagebox.showinfo('Informação de Erro', mensagem)
+        else:
+            self.variaveis()
+            self.conectar_banco()
+            self.cursor.execute('''UPDATE operacoes SET codigo_operacao = ?, data = ?, qtd_acoes = ?, valor_unitario = ?, tipo_operacao = ?, taxa_corretagem = ?, taxa_b3 = ?, valor_operacao = ?, preco_medio = ?
+                WHERE id_operacao = ?
+            ''', (self.cod_ativo, self.data, self.qtd, self.valor_unt, self.tipo_op, self.taxa_corr, self.tx_b3, self.valor_op, self.preco_medio, self.id_oper))
+            self.conector.commit()
+            self.desconectar_banco()
+            self.select_lista()
+            self.limpar_tela()
 
     def buscar_operacao(self):
-        """--> Função que permite realizar uma busca da operações contidas na lista no banco de dados.
-        """
         self.conectar_banco()
         self.lista_operacoes.delete(*self.lista_operacoes.get_children())
 
@@ -218,20 +189,17 @@ class funcoes:
         self.desconectar_banco()
 
     def exibir_calendario(self):
-        """--> Função que permite inserir uma data através do calendário.
-        """
-        self.calendario = Calendar(self.aba1, fg='gray75', bg='blue', font=('verdana', 8, 'bold'), locale='pt_br')
+        self.calendario = Calendar(self.aba1, fg='gray75', bg='blue', font=(
+            'verdana', 8, 'bold'), locale='pt_br')
         self.calendario.place(relx=0.5, rely=0.1)
-        self.gravar_data = Button(self.aba1, text='Inserir data', bd=2, bg='red', fg='white', font=('verdana', 8, 'bold'), command=self.imprimir_data)
+        self.gravar_data = Button(self.aba1, text='Inserir data', bd=2, bg='red', fg='white', font=(
+            'verdana', 8, 'bold'), command=self.imprimir_data)
         self.gravar_data.place(relx=0.26, rely=0.64, relheight=0.10)
 
     def imprimir_data(self):
-        """--> Função que permite mostrar a data do sistema.
-        Gravar, deletar e inserir dados através do comando.
-        """
         data = self.calendario.get_date()
         self.calendario.destroy()
-        self.entrada_data.config(state = 'normal')
+        self.entrada_data.config(state='normal')
         self.entrada_data.delete(0, END)
         self.entrada_data.insert(END, data)
         self.gravar_data.destroy()
